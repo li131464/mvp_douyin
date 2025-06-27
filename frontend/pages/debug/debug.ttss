@@ -1,0 +1,142 @@
+.container {
+  padding: 20rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+.header {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  backdrop-filter: blur(10rpx);
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  display: block;
+  text-align: center;
+  margin-bottom: 20rpx;
+}
+
+.status {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.status-item {
+  font-size: 28rpx;
+  color: #666;
+  padding: 10rpx 20rpx;
+  background: #f5f5f5;
+  border-radius: 8rpx;
+}
+
+.actions {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  backdrop-filter: blur(10rpx);
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.btn {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.3);
+}
+
+.btn.secondary {
+  background: linear-gradient(45deg, #f093fb, #f5576c);
+  box-shadow: 0 4rpx 12rpx rgba(240, 147, 251, 0.3);
+}
+
+.btn:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 6rpx rgba(102, 126, 234, 0.3);
+}
+
+.logs {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 16rpx;
+  backdrop-filter: blur(10rpx);
+  height: 600rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.logs-header {
+  padding: 30rpx;
+  border-bottom: 1rpx solid #eee;
+}
+
+.logs-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.logs-content {
+  flex: 1;
+  padding: 20rpx;
+}
+
+.log-item {
+  margin-bottom: 16rpx;
+  padding: 20rpx;
+  background: #f8f9fa;
+  border-radius: 8rpx;
+  border-left: 4rpx solid #667eea;
+}
+
+.log-text {
+  font-size: 24rpx;
+  color: #333;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.empty-logs {
+  text-align: center;
+  padding: 60rpx;
+  color: #999;
+  font-size: 28rpx;
+}
+
+/* 测试按钮区域样式 */
+.test-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin: 20rpx 0;
+  padding: 0 20rpx;
+}
+
+.test-btn {
+  flex: 1;
+  min-width: 200rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 10rpx;
+  font-size: 24rpx;
+  margin: 5rpx;
+}
+
+.test-btn:active {
+  transform: scale(0.95);
+  opacity: 0.8;
+} 

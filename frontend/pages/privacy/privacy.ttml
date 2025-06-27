@@ -1,0 +1,36 @@
+<view class="privacy-container">
+  <view class="privacy-header">
+    <text class="privacy-title">隐私政策</text>
+  </view>
+  
+  <view class="privacy-content">
+    <view class="privacy-section">
+      <text class="section-title">1. 信息收集</text>
+      <text class="section-content">本应用可能收集以下信息：\n• 用户头像和昵称（用于个性化显示）\n• 设备信息（用于应用优化）\n• 使用记录（用于功能改进）</text>
+    </view>
+    
+    <view class="privacy-section">
+      <text class="section-title">2. 信息使用</text>
+      <text class="section-content">收集的信息仅用于：\n• 提供更好的用户体验\n• 个性化内容展示\n• 应用功能优化</text>
+    </view>
+    
+    <view class="privacy-section">
+      <text class="section-title">3. 信息保护</text>
+      <text class="section-content">我们承诺：\n• 不会泄露用户个人信息\n• 采用安全措施保护数据\n• 仅在必要时收集最少信息</text>
+    </view>
+    
+    <view class="privacy-section">
+      <text class="section-title">4. 权限说明</text>
+      <text class="section-content">应用需要以下权限：\n• 用户信息权限：用于获取头像和昵称\n• 存储权限：用于保存待办事项\n• 网络权限：用于数据同步</text>
+    </view>
+    
+    <view class="privacy-section">
+      <text class="section-title">5. 联系我们</text>
+      <text class="section-content">如有隐私相关问题，请联系开发者。</text>
+    </view>
+  </view>
+  
+  <view class="privacy-footer">
+    <text class="update-time">最后更新：{{ new Date().toLocaleDateString() }}</text>
+  </view>
+</view> 

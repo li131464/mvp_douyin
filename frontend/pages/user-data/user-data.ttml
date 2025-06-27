@@ -1,0 +1,162 @@
+<view class="container">
+  <!-- 顶部导航 -->
+  <view class="header">
+    <view class="header-left" bind:tap="goBack">
+      <text class="back-icon">‹</text>
+      <text class="back-text">返回</text>
+    </view>
+    <view class="header-title">我的数据</view>
+    <view class="header-right"></view>
+  </view>
+
+  <!-- 用户信息 -->
+  <view class="user-info" tt:if="{{userInfo}}">
+    <image class="avatar" src="{{userInfo.avatarUrl}}" mode="aspectFill"></image>
+    <text class="nickname">{{userInfo.nickName}}</text>
+  </view>
+
+  <!-- 标签页导航 -->
+  <view class="tabs">
+    <view 
+      class="tab-item {{activeTab === 'videos' ? 'active' : ''}}"
+      data-tab="videos"
+      bind:tap="switchTab"
+    >
+      <text class="tab-text">我的视频</text>
+      <text class="tab-count" tt:if="{{videos.length > 0}}">({{videos.length}})</text>
+    </view>
+    <view 
+      class="tab-item {{activeTab === 'comments' ? 'active' : ''}}"
+      data-tab="comments"
+      bind:tap="switchTab"
+    >
+      <text class="tab-text">我的评论</text>
+      <text class="tab-count" tt:if="{{comments.length > 0}}">({{comments.length}})</text>
+    </view>
+    <view 
+      class="tab-item {{activeTab === 'messages' ? 'active' : ''}}"
+      data-tab="messages"
+      bind:tap="switchTab"
+    >
+      <text class="tab-text">私信消息</text>
+      <text class="tab-count" tt:if="{{messages.length > 0}}">({{messages.length}})</text>
+    </view>
+  </view>
+
+  <!-- 内容区域 -->
+  <view class="content">
+    <!-- 加载状态 -->
+    <view class="loading-container" tt:if="{{loading}}">
+      <view class="loading-spinner"></view>
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <!-- 视频列表 -->
+    <view class="video-list" tt:if="{{activeTab === 'videos' && !loading}}">
+      <view 
+        class="video-item"
+        tt:for="{{videos}}"
+        tt:key="item_id"
+        data-index="{{index}}"
+        bind:tap="viewVideoDetail"
+      >
+        <view class="video-cover">
+          <image src="{{item.cover}}" mode="aspectFill"></image>
+          <view class="video-duration">{{formatDuration(item.duration)}}</view>
+          <view class="video-top" tt:if="{{item.is_top}}">置顶</view>
+        </view>
+        <view class="video-info">
+          <text class="video-title">{{item.title}}</text>
+          <view class="video-stats">
+            <text class="stat-item">播放 {{formatNumber(item.statistics.play_count)}}</text>
+            <text class="stat-item">点赞 {{formatNumber(item.statistics.digg_count)}}</text>
+            <text class="stat-item">评论 {{formatNumber(item.statistics.comment_count)}}</text>
+          </view>
+          <text class="video-time">{{formatTime(item.create_time)}}</text>
+        </view>
+      </view>
+      
+      <!-- 视频列表为空 -->
+      <view class="empty-state" tt:if="{{videos.length === 0 && !videoLoading}}">
+        <text class="empty-icon">📹</text>
+        <text class="empty-text">暂无视频数据</text>
+      </view>
+      
+      <!-- 加载更多 -->
+      <view class="load-more" tt:if="{{videoLoading}}">
+        <text>加载中...</text>
+      </view>
+    </view>
+
+    <!-- 评论列表 -->
+    <view class="comment-list" tt:if="{{activeTab === 'comments' && !loading}}">
+      <view 
+        class="comment-item"
+        tt:for="{{comments}}"
+        tt:key="comment_id"
+        data-index="{{index}}"
+        bind:tap="viewCommentDetail"
+      >
+        <view class="comment-content">
+          <text class="comment-text">{{item.text}}</text>
+          <view class="comment-video" tt:if="{{item.item_title}}">
+            <text class="video-label">视频:</text>
+            <text class="video-name">{{item.item_title}}</text>
+          </view>
+        </view>
+        <view class="comment-meta">
+          <view class="comment-stats">
+            <text class="stat-item">👍 {{item.digg_count}}</text>
+            <text class="stat-item">💬 {{item.reply_count}}</text>
+            <text class="top-badge" tt:if="{{item.top}}">置顶</text>
+          </view>
+          <text class="comment-time">{{formatTime(item.create_time)}}</text>
+        </view>
+      </view>
+      
+      <!-- 评论列表为空 -->
+      <view class="empty-state" tt:if="{{comments.length === 0 && !commentLoading}}">
+        <text class="empty-icon">💬</text>
+        <text class="empty-text">暂无评论数据</text>
+      </view>
+      
+      <!-- 加载更多 -->
+      <view class="load-more" tt:if="{{commentLoading}}">
+        <text>加载中...</text>
+      </view>
+    </view>
+
+    <!-- 私信列表 -->
+    <view class="message-list" tt:if="{{activeTab === 'messages' && !loading}}">
+      <view 
+        class="message-item"
+        tt:for="{{messages}}"
+        tt:key="message_id"
+        data-index="{{index}}"
+        bind:tap="viewMessageDetail"
+      >
+        <view class="message-avatar">
+          <image src="{{item.from_user.avatar}}" mode="aspectFill"></image>
+        </view>
+        <view class="message-content">
+          <view class="message-header">
+            <text class="sender-name">{{item.from_user.nickname}}</text>
+            <text class="message-time">{{formatTime(item.create_time)}}</text>
+          </view>
+          <text class="message-text">{{item.content}}</text>
+        </view>
+      </view>
+      
+      <!-- 私信列表为空 -->
+      <view class="empty-state" tt:if="{{messages.length === 0 && !messageLoading}}">
+        <text class="empty-icon">✉️</text>
+        <text class="empty-text">暂无私信数据</text>
+      </view>
+      
+      <!-- 加载更多 -->
+      <view class="load-more" tt:if="{{messageLoading}}">
+        <text>加载中...</text>
+      </view>
+    </view>
+  </view>
+</view> 

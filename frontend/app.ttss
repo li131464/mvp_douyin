@@ -1,0 +1,176 @@
+/* 全局样式重置和基础设置 */
+page {
+  background: #f5f7fa;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* 全局按钮基础样式 */
+.add-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FE2C55, #e91e63);
+  color: #FFFFFF;
+  border: none;
+  width: 300rpx;
+  height: 120rpx;
+  border-radius: 60rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+  box-shadow: 0 15rpx 35rpx rgba(254, 44, 85, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.add-button:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 10rpx 25rpx rgba(254, 44, 85, 0.4);
+}
+
+.add-button::after {
+  border: none;
+}
+
+.add-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.add-button:active::before {
+  left: 100%;
+}
+
+/* 通用卡片样式 */
+.card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 30rpx;
+  box-shadow: 0 20rpx 40rpx rgba(0, 0, 0, 0.1);
+  border: 1rpx solid rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+}
+
+/* 通用图标样式 */
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-style: normal;
+  line-height: 1;
+  text-align: center;
+  vertical-align: middle;
+  border-radius: 50%;
+}
+
+.icon-sm {
+  width: 60rpx;
+  height: 60rpx;
+  font-size: 28rpx;
+}
+
+.icon-md {
+  width: 80rpx;
+  height: 80rpx;
+  font-size: 36rpx;
+}
+
+.icon-lg {
+  width: 120rpx;
+  height: 120rpx;
+  font-size: 60rpx;
+}
+
+/* 渐变背景主题 */
+.gradient-primary {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.gradient-success {
+  background: linear-gradient(135deg, #11998e, #38ef7d);
+}
+
+.gradient-warning {
+  background: linear-gradient(135deg, #f093fb, #f5576c);
+}
+
+.gradient-danger {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+}
+
+/* 文本样式 */
+.text-gradient {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: bold;
+}
+
+.text-shadow {
+  text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 动画效果 */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.scale-in {
+  animation: scaleIn 0.3s ease-out;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* 响应式辅助类 */
+.container {
+  max-width: 750rpx;
+  margin: 0 auto;
+  padding: 0 40rpx;
+}
+
+.container-sm {
+  max-width: 600rpx;
+  margin: 0 auto;
+  padding: 0 30rpx;
+}
+
+/* 间距辅助类 */
+.mt-sm { margin-top: 20rpx; }
+.mt-md { margin-top: 40rpx; }
+.mt-lg { margin-top: 60rpx; }
+
+.mb-sm { margin-bottom: 20rpx; }
+.mb-md { margin-bottom: 40rpx; }
+.mb-lg { margin-bottom: 60rpx; }
+
+.p-sm { padding: 20rpx; }
+.p-md { padding: 40rpx; }
+.p-lg { padding: 60rpx; }
+
+/* 安全区域适配 */
+.safe-area-top {
+  padding-top: constant(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+}

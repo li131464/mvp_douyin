@@ -1,0 +1,167 @@
+<view class="page-container">
+  <!-- 背景装饰 -->
+  <view class="bg-decoration">
+    <view class="bg-circle bg-circle-1"></view>
+    <view class="bg-circle bg-circle-2"></view>
+    <view class="bg-circle bg-circle-3"></view>
+  </view>
+
+  <!-- 头部区域 -->
+  <view class="header-section">
+    <view class="logo-container">
+      <text class="app-title">抖音数据获取</text>
+      <text class="app-subtitle">安全获取您的抖音数据</text>
+    </view>
+  </view>
+
+  <!-- 主要内容区域 -->
+  <view class="main-content">
+    <!-- 登录状态卡片 -->
+    <view class="login-card">
+      <!-- 未主动登录状态 -->
+      <view tt:if="{{!hasManualLogin}}" class="login-prompt">
+        <view class="prompt-icon">
+          <text class="icon-text">🚀</text>
+        </view>
+        <text class="prompt-title">开始数据获取之旅</text>
+        <text class="prompt-desc">登录抖音账号，安全获取您的数据</text>
+        <button class="login-btn-primary" bindtap="login">
+          <view class="btn-content">
+            <text class="btn-icon">📱</text>
+            <text class="btn-text">登录抖音</text>
+          </view>
+        </button>
+      </view>
+      
+      <!-- 已主动登录但未获取用户信息 -->
+      <view tt:elif="{{hasManualLogin && !user && !hasOAuthAuth}}" class="profile-prompt">
+        <view class="prompt-icon success">
+          <text class="icon-text">✨</text>
+        </view>
+        <text class="prompt-title">登录成功！</text>
+        <text class="prompt-desc">选择您需要的功能</text>
+        
+        <view class="action-buttons-group">
+          <button class="profile-btn" bindtap="getUserProfile">
+            <view class="btn-content">
+              <text class="btn-icon">👤</text>
+              <text class="btn-text">获取头像昵称</text>
+            </view>
+          </button>
+          
+          <button class="oauth-btn" bindtap="authorizeUserData">
+            <view class="btn-content">
+              <text class="btn-icon">🔐</text>
+              <text class="btn-text">授权数据访问</text>
+            </view>
+          </button>
+        </view>
+        
+        <view class="privacy-notice">
+          <text class="notice-text">点击即表示同意</text>
+          <text class="privacy-link" bindtap="goToPrivacy">《隐私政策》</text>
+        </view>
+      </view>
+      
+      <!-- 完整登录状态 -->
+      <view tt:else class="user-profile">
+        <view class="profile-header">
+          <view tt:if="{{user}}" class="avatar-container">
+            <image class="user-avatar" src="{{user.avatarUrl}}" mode="aspectFill"></image>
+            <view class="avatar-badge">
+              <text class="badge-icon">✓</text>
+            </view>
+          </view>
+          <view class="user-info">
+            <text class="user-name">{{user.nickName || '抖音用户'}}</text>
+            <text class="welcome-text">欢迎回来！</text>
+          </view>
+        </view>
+        
+        <!-- OAuth授权状态 -->
+        <view tt:if="{{hasOAuthAuth}}" class="oauth-status">
+          <view class="oauth-header">
+            <view class="oauth-icon">
+              <text>🔐</text>
+            </view>
+            <view class="oauth-info">
+              <text class="oauth-title">数据访问已授权</text>
+              <text class="oauth-desc">已获得{{authorizedScopes.length}}项权限</text>
+            </view>
+            <button class="view-scopes-btn" bindtap="viewAuthorizedScopes">
+              <text>查看</text>
+            </button>
+          </view>
+        </view>
+        
+        <!-- 用户ID信息 -->
+        <view class="user-details">
+          <view tt:if="{{openid}}" class="detail-item">
+            <view class="detail-icon">
+              <text>🆔</text>
+            </view>
+            <view class="detail-content">
+              <text class="detail-label">OpenID</text>
+              <text class="detail-value">{{openid}}</text>
+            </view>
+          </view>
+          
+          <view tt:if="{{unionid}}" class="detail-item">
+            <view class="detail-icon">
+              <text>🔗</text>
+            </view>
+            <view class="detail-content">
+              <text class="detail-label">UnionID</text>
+              <text class="detail-value">{{unionid}}</text>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 未授权时显示授权按钮 -->
+        <view tt:if="{{!hasOAuthAuth}}" class="oauth-prompt">
+          <button class="oauth-btn secondary" bindtap="authorizeUserData">
+            <view class="btn-content">
+              <text class="btn-icon">🔐</text>
+              <text class="btn-text">授权数据访问</text>
+            </view>
+          </button>
+          <text class="oauth-prompt-text">授权后可访问您的视频、评论、私信等数据</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 功能按钮区域 -->
+    <view class="action-section">
+      <button tt:if="{{hasOAuthAuth}}" class="action-btn primary" bindtap="goToUserData">
+        <view class="btn-content">
+          <text class="btn-icon large">📊</text>
+          <view class="btn-text-group">
+            <text class="btn-title">查看用户数据</text>
+            <text class="btn-subtitle">访问您的视频、评论、私信</text>
+          </view>
+        </view>
+        <view class="btn-arrow">→</view>
+      </button>
+      
+      <button tt:if="{{hasManualLogin && (openid || user)}}" class="action-btn tertiary" bindtap="logout">
+        <view class="btn-content">
+          <text class="btn-icon">🚪</text>
+          <text class="btn-text">退出登录</text>
+        </view>
+      </button>
+      
+      <!-- 调试工具按钮 -->
+      <button class="action-btn debug" bindtap="goToDebug">
+        <view class="btn-content">
+          <text class="btn-icon">🔧</text>
+          <text class="btn-text">调试工具</text>
+        </view>
+      </button>
+    </view>
+  </view>
+
+  <!-- 底部装饰 -->
+  <view class="footer-decoration">
+    <view class="decoration-wave"></view>
+  </view>
+</view>

@@ -1,0 +1,23 @@
+{
+  "pages":[
+    "pages/index/index",
+    "pages/privacy/privacy",
+    "pages/user-data/user-data",
+    "pages/debug/debug"
+  ],
+  "window":{
+    "backgroundTextStyle":"light",
+    "navigationBarBackgroundColor": "#fff",
+    "navigationBarTitleText": "抖音数据获取",
+    "navigationBarTextStyle":"black"
+  },
+  "requiredPrivacyInfos": [
+    "getUserProfile"
+  ],
+  "privacyDescList": [
+    {
+      "privacyKey": "getUserProfile",
+      "privacyText": "获取用户头像昵称，用于个性化展示和用户身份识别"
+    }
+  ]
+}

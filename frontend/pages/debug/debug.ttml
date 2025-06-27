@@ -1,0 +1,46 @@
+<view class="container">
+  <view class="header">
+    <text class="title">抖音授权调试工具</text>
+    <view class="status">
+      <text class="status-item">登录状态: {{isLogin ? '已登录' : '未登录'}}</text>
+      <text class="status-item">OAuth状态: {{hasOAuth ? '已授权' : '未授权'}}</text>
+    </view>
+  </view>
+
+  <view class="actions">
+    <button class="btn" bindtap="testLogin">测试登录</button>
+    <button class="btn" bindtap="testAuth">测试OAuth授权</button>
+    <button class="btn" bindtap="testDirectAuth">直接调用授权API</button>
+    <button class="btn" bindtap="testDifferentScopes">测试不同权限</button>
+    <button class="btn" bindtap="testMockAuth">测试模拟授权</button>
+    <button class="btn" bindtap="testRealData">测试真实数据</button>
+    <button class="btn secondary" bindtap="logout">注销</button>
+    <button class="btn secondary" bindtap="clearLogs">清除日志</button>
+  </view>
+
+  <!-- 测试按钮区域 -->
+  <view class="test-buttons">
+    <button bindtap="testLogin" class="test-btn">测试登录</button>
+    <button bindtap="testAuth" class="test-btn">测试授权</button>
+    <button bindtap="testDirectAuth" class="test-btn">直接调用授权API</button>
+    <button bindtap="testSingleScope" class="test-btn">测试单一权限</button>
+    <button bindtap="testDetailedAuth" class="test-btn">详细权限测试</button>
+    <button bindtap="testMockAuth" class="test-btn">测试模拟授权</button>
+    <button bindtap="testRealData" class="test-btn">测试真实数据</button>
+    <button bindtap="testDifferentScopes" class="test-btn">测试不同权限</button>
+  </view>
+
+  <view class="logs">
+    <view class="logs-header">
+      <text class="logs-title">调试日志 ({{logs.length}}条)</text>
+    </view>
+    <scroll-view class="logs-content" scroll-y="true">
+      <view class="log-item" tt:for="{{logs}}" tt:key="index">
+        <text class="log-text">{{item}}</text>
+      </view>
+      <view tt:if="{{logs.length === 0}}" class="empty-logs">
+        <text>暂无日志</text>
+      </view>
+    </scroll-view>
+  </view>
+</view> 

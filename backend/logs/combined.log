@@ -1,0 +1,71 @@
+{"level":"warn","message":"Douyin API credentials not configured, using mock mode","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:01:58"}
+{"level":"info","message":"Server is running on port 3000","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:01:58"}
+{"level":"info","message":"Environment: development","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:01:58"}
+{"level":"info","message":"Health check: http://localhost:3000/health","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:01:58"}
+{"code":"test_code","level":"info","message":"Code2session request:","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:02:06"}
+{"level":"info","message":"Using mock code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:02:06"}
+{"level":"info","message":"Code2session success:","openid":"mock_openid_ds4mx3i3n","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:02:06"}
+{"level":"info","message":"Get access token request:","openId":"mock_openid_ds4mx3i3n","service":"douyin-miniapp-backend","ticket":"test_ticket","timestamp":"2025-06-23 15:02:17"}
+{"level":"info","message":"Using mock get access token","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:02:17"}
+{"level":"info","message":"Get access token success:","openId":"mock_openid_ds4mx3i3n","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:02:17"}
+{"count":5,"cursor":0,"level":"info","message":"Get user videos request:","openId":"mock_openid_ds4mx3i3n","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:02:28"}
+{"level":"info","message":"Using mock get user videos","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:02:28"}
+{"count":5,"cursor":5,"hasMore":true,"level":"info","message":"Get user videos success:","openId":"mock_openid_ds4mx3i3n","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:02:28"}
+{"level":"info","message":"Server is running on port 3000","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:22:22"}
+{"level":"info","message":"Environment: development","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:22:22"}
+{"level":"info","message":"Health check: http://localhost:3000/health","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:22:22"}
+{"code":"test_real_code","level":"info","message":"Code2session request:","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:22:29"}
+{"level":"info","message":"Code2session success:","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:22:30"}
+{"code":"test_code_123","level":"info","message":"Code2session request:","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:23:02"}
+{"level":"info","message":"Code2session success:","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:23:02"}
+{"code":"test_code_456","level":"info","message":"Code2session request:","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:23:14"}
+{"level":"info","message":"Code2session success:","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:23:14"}
+{"level":"info","message":"Server is running on port 3000","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:24:52"}
+{"level":"info","message":"Environment: development","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:24:52"}
+{"level":"info","message":"Health check: http://localhost:3000/health","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:24:52"}
+{"code":"test_code_789","level":"info","message":"Code2session request:","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:24:52"}
+{"level":"info","message":"Attempting real Douyin API call for code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:24:52"}
+{"level":"info","message":"Real Douyin API call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:24:53"}
+{"level":"info","message":"Code2session success:","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:24:53"}
+{"code":"test_code_powershell","level":"info","message":"Code2session request:","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:25:21"}
+{"level":"info","message":"Attempting real Douyin API call for code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:25:21"}
+{"level":"info","message":"Real Douyin API call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:25:22"}
+{"level":"info","message":"Code2session success:","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:25:22"}
+{"code":"test_code_full","level":"info","message":"Code2session request:","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:26:08"}
+{"level":"info","message":"Attempting real Douyin API call for code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:26:08"}
+{"level":"info","message":"Real Douyin API call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:26:08"}
+{"level":"info","message":"Code2session success:","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:26:08"}
+{"level":"info","message":"Server is running on port 3000","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:28:22"}
+{"level":"info","message":"Environment: development","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:28:22"}
+{"level":"info","message":"Health check: http://localhost:3000/health","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:28:22"}
+{"code":"test_final","level":"info","message":"Code2session request:","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:29:18"}
+{"level":"info","message":"Attempting real Douyin API call for code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:29:18"}
+{"level":"info","message":"Real Douyin API call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:29:18"}
+{"level":"info","message":"Code2session success:","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:29:18"}
+{"level":"info","message":"Server is running on port 3000","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:30:18"}
+{"level":"info","message":"Environment: development","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:30:18"}
+{"level":"info","message":"Health check: http://localhost:3000/health","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:30:18"}
+{"code":"test_debug_final","level":"info","message":"Code2session request:","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:30:19"}
+{"level":"info","message":"Attempting real Douyin API call for code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:30:19"}
+{"level":"info","message":"Real Douyin API call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:30:19"}
+{"level":"info","message":"Real API response data:","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:30:19"}
+{"level":"warn","message":"Real API returned incomplete data, falling back to mock","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:30:19"}
+{"level":"info","message":"Using mock code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:30:19"}
+{"level":"info","message":"Code2session success:","openid":"mock_openid_pdrq86xhd","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:30:20"}
+{"level":"info","message":"Get access token request:","openId":"mock_openid_test","service":"douyin-miniapp-backend","ticket":"test_ticket","timestamp":"2025-06-23 15:30:59"}
+{"level":"info","message":"Attempting real Douyin API call for access token","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:30:59"}
+{"level":"info","message":"Real Douyin API access token call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:30:59"}
+{"level":"info","message":"Get access token success:","openId":"mock_openid_test","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:30:59"}
+{"level":"info","message":"Server is running on port 3000","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:44:56"}
+{"level":"info","message":"Environment: development","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:44:56"}
+{"level":"info","message":"Health check: http://localhost:3000/health","service":"douyin-miniapp-backend","timestamp":"2025-06-23 15:44:56"}
+{"level":"info","message":"Server is running on port 3000","service":"douyin-miniapp-backend","timestamp":"2025-06-23 16:17:15"}
+{"level":"info","message":"Environment: development","service":"douyin-miniapp-backend","timestamp":"2025-06-23 16:17:15"}
+{"level":"info","message":"Health check: http://localhost:3000/health","service":"douyin-miniapp-backend","timestamp":"2025-06-23 16:17:15"}
+{"level":"info","message":"Server is running on port 3000","service":"douyin-miniapp-backend","timestamp":"2025-06-27 11:33:06"}
+{"level":"info","message":"Environment: development","service":"douyin-miniapp-backend","timestamp":"2025-06-27 11:33:06"}
+{"level":"info","message":"Health check: http://localhost:3000/health","service":"douyin-miniapp-backend","timestamp":"2025-06-27 11:33:06"}
+{"level":"info","message":"Get access token request:","openId":"mock_openid_mz8jo8inm","service":"douyin-miniapp-backend","ticket":"mock_ticket","timestamp":"2025-06-27 13:57:24"}
+{"level":"info","message":"Attempting real Douyin API call for access token","service":"douyin-miniapp-backend","timestamp":"2025-06-27 13:57:24"}
+{"level":"info","message":"Real Douyin API access token call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-27 13:57:24"}
+{"level":"info","message":"Get access token success:","openId":"mock_openid_mz8jo8inm","service":"douyin-miniapp-backend","timestamp":"2025-06-27 13:57:24"}
