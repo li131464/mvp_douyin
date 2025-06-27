@@ -3,8 +3,15 @@
  * 基于抖音开放平台API实现
  */
 
-// 后端API的基础URL
-const BACKEND_API_BASE = 'http://localhost:3000';
+// 后端API的基础URL - 根据环境自动选择
+let BACKEND_API_BASE = 'http://localhost:3000';
+
+// 检测是否在真机环境中，如果是则可能需要使用不同的后端地址
+function getBackendApiBase() {
+  // 在真机环境中，可以配置为实际的服务器地址
+  // 目前先使用localhost，如果连接失败会自动切换到模拟模式
+  return BACKEND_API_BASE;
+}
 
 class DouyinAuth {
   constructor() {
@@ -23,7 +30,7 @@ class DouyinAuth {
   }
 
   /**
-   * 基础登录 - 获取临时凭证code
+   * 基础登录 - 获取临时凭证code，并获取用户信息
    */
   async login() {
     try {
@@ -38,13 +45,32 @@ class DouyinAuth {
 
       console.log('获取到临时凭证:', loginResult.code);
       
-      // 调用后端API进行code2session
+      // 第二步：调用后端API进行code2session
       await this._callCode2Session(loginResult.code);
       
-      // 获取基本用户信息
-      await this._getUserInfo();
+      // 第三步：尝试获取用户头像和昵称（可选，失败不影响登录）
+      console.log('=== 开始第三步：获取用户头像和昵称 ===');
+      console.log('这一步将弹出授权弹窗，请用户授权获取头像和昵称...');
+      
+      try {
+        const userInfo = await this._getUserProfileWithAuth();
+        console.log('成功获取用户头像和昵称:', userInfo);
+      } catch (error) {
+        console.warn('获取用户头像和昵称失败，但不影响登录流程:', error.message);
+        console.warn('将使用默认用户信息');
+        // 确保有默认用户信息
+        if (!this._userInfo) {
+          this._userInfo = {
+            nickName: '抖音用户',
+            avatarUrl: '/icon.png'
+          };
+        }
+      }
       
       this._saveToStorage();
+      
+      console.log('=== 登录流程完成 ===');
+      console.log('最终用户信息:', this._userInfo);
       
       return {
         success: true,
@@ -274,6 +300,10 @@ class DouyinAuth {
   async _callCode2Session(code) {
     console.log('调用后端code2session，code:', code);
     
+    // 检测环境
+    const isDevTools = this._isDevTools();
+    console.log('当前环境:', isDevTools ? '开发者工具' : '真机环境');
+    
     try {
       const result = await this._callBackendAPI('/api/auth/code2session', {
         method: 'POST',
@@ -287,7 +317,10 @@ class DouyinAuth {
       
       console.log('后端登录成功，openId:', this._openId);
     } catch (error) {
-      console.error('后端code2session失败:', error);
+      console.warn('后端code2session失败:', error.message);
+      if (!isDevTools) {
+        console.log('真机环境下无法访问localhost后端是正常的，自动切换到模拟模式');
+      }
       // 如果后端调用失败，回退到模拟模式
       await this._simulateCode2Session(code);
     }
@@ -563,7 +596,100 @@ class DouyinAuth {
   }
 
   /**
-   * 获取基本用户信息
+   * 获取用户头像和昵称（带授权弹窗）
+   */
+  async _getUserProfileWithAuth() {
+    try {
+      console.log('=== 开始获取用户头像和昵称 ===');
+      
+      // 检查是否在抖音环境中
+      if (typeof tt === 'undefined') {
+        console.log('不在抖音小程序环境中，使用模拟数据');
+        this._userInfo = {
+          nickName: '抖音测试用户',
+          avatarUrl: '/icon.png'
+        };
+        return this._userInfo;
+      }
+      
+      if (!tt.getUserProfile) {
+        console.log('tt.getUserProfile API不可用，使用模拟数据');
+        this._userInfo = {
+          nickName: '抖音测试用户',
+          avatarUrl: '/icon.png'
+        };
+        return this._userInfo;
+      }
+      
+      console.log('准备调用tt.getUserProfile，申请用户头像和昵称权限...');
+      
+      // 直接调用tt.getUserProfile，和测试按钮使用相同的方式
+      const result = await new Promise((resolve, reject) => {
+        tt.getUserProfile({
+          desc: '获取你的昵称、头像用于个性化展示', // 授权说明文案
+          success: (res) => {
+            console.log('tt.getUserProfile success:', res);
+            resolve(res);
+          },
+          fail: (err) => {
+            console.error('tt.getUserProfile fail:', err);
+            reject(err);
+          }
+        });
+      });
+      
+      console.log('tt.getUserProfile调用成功，获取到用户信息:', result);
+      
+      if (result && result.userInfo) {
+        this._userInfo = result.userInfo;
+        console.log('用户信息设置成功:', this._userInfo);
+        return this._userInfo;
+      } else {
+        console.warn('获取到的结果中没有userInfo字段:', result);
+        throw new Error('未获取到有效的用户信息');
+      }
+      
+    } catch (error) {
+      console.error('=== 获取用户信息失败 ===');
+      console.error('错误类型:', typeof error);
+      console.error('错误对象:', error);
+      console.error('错误消息:', error.message);
+      console.error('错误码:', error.errNo);
+      console.error('错误详情:', error.errMsg);
+      
+      // 如果用户拒绝授权
+      if (error.errMsg && (error.errMsg.includes('cancel') || error.errMsg.includes('deny'))) {
+        console.log('用户取消了头像昵称授权');
+        // 不抛出错误，使用默认信息
+        this._userInfo = {
+          nickName: '抖音用户',
+          avatarUrl: '/icon.png'
+        };
+        return this._userInfo;
+      } 
+      
+      // 如果是开发者工具环境的特殊情况
+      if (this._isDevTools()) {
+        console.log('开发者工具环境中获取用户信息失败，使用测试数据');
+        this._userInfo = {
+          nickName: '开发测试用户',
+          avatarUrl: '/icon.png'
+        };
+        return this._userInfo;
+      }
+      
+      // 其他错误情况，使用默认信息但不影响登录
+      console.warn('使用默认用户信息');
+      this._userInfo = {
+        nickName: '抖音用户',
+        avatarUrl: '/icon.png'
+      };
+      return this._userInfo;
+    }
+  }
+
+  /**
+   * 获取基本用户信息（不弹授权弹窗）
    */
   async _getUserInfo() {
     try {
@@ -665,7 +791,8 @@ class DouyinAuth {
           url: url,
           method: config.method,
           data: options.body,
-          header: config.headers
+          header: config.headers,
+          timeout: 10000 // 10秒超时
         });
         
         if (result.data && result.data.success) {
@@ -686,7 +813,25 @@ class DouyinAuth {
       }
     } catch (error) {
       console.error('后端API调用失败:', error);
-      throw error;
+      
+      // 分析错误类型，提供更友好的错误信息
+      let errorMsg = '后端API调用失败';
+      if (error.errMsg) {
+        if (error.errMsg.includes('timeout') || error.errMsg.includes('连接超时')) {
+          errorMsg = '网络连接超时，真机环境下无法访问localhost后端服务';
+        } else if (error.errMsg.includes('fail') || error.errMsg.includes('network')) {
+          errorMsg = '网络连接失败，真机环境下无法访问localhost后端服务';
+        } else {
+          errorMsg = error.errMsg;
+        }
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      
+      console.warn('网络错误详情:', errorMsg);
+      console.log('这在真机环境下是正常的，将自动切换到模拟数据模式');
+      
+      throw new Error(errorMsg);
     }
   }
 
