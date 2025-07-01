@@ -9,11 +9,12 @@ function getBackendApiBase() {
   const isDevTools = _isDevToolsEnv();
   
   if (isDevTools) {
-    // 开发者工具环境使用本地服务器
-    return 'http://kuzchat.cn:3090';
+    // 开发者工具环境 - 使用HTTP
+    return 'http://kuzchat.cn:3090'; 
   } else {
-    // 真机环境使用您的域名和端口
-    return 'http://kuzchat.cn:3090';
+    // 真机环境 - 抖音小程序通常要求HTTPS
+    // 但如果服务器没有SSL证书，会自动在代码中回退到HTTP
+    return 'https://kuzchat.cn:3090';
   }
 }
 
@@ -173,9 +174,7 @@ class DouyinAuth {
           
           // 如果后端调用失败（比如网络问题），回退到模拟模式
           console.log('设置模拟OAuth状态...');
-          this._accessToken = 'mock_access_token_' + Math.random().toString(36).substr(2, 32);
-          this._refreshToken = 'mock_refresh_token_' + Math.random().toString(36).substr(2, 32);
-          this._expiresAt = Date.now() + (7200 * 1000); // 2小时后过期
+          this._setMockAccessToken();
           
           // 设置授权的权限列表
           this._authorizedScopes = authResult.grantPermissions || scopes;
@@ -185,6 +184,11 @@ class DouyinAuth {
           
           console.log('模拟OAuth授权设置完成 - hasOAuthAuth:', this.hasOAuthAuth);
           console.log('模拟权限:', this._authorizedScopes);
+          console.log('模拟Token状态:', {
+            hasAccessToken: !!this._accessToken,
+            tokenLength: this._accessToken ? this._accessToken.length : 0,
+            hasOAuthAuth: this.hasOAuthAuth
+          });
           
           return {
             success: true,
@@ -459,23 +463,37 @@ class DouyinAuth {
       console.log('预设权限列表:', this._authorizedScopes);
       
       // 尝试调用后端API获取access_token，如果失败则直接设置模拟token
+      let backendCallSuccess = false;
       try {
         console.log('尝试调用后端获取access_token...');
         await this._callGetAccessToken(mockTicket);
-        console.log('后端调用成功');
+        
+        // 检查是否真的获取到了token
+        if (this._accessToken && this._accessToken.length > 0) {
+          console.log('后端调用成功，获取到真实token，长度:', this._accessToken.length);
+          backendCallSuccess = true;
+        } else {
+          console.warn('后端调用成功但未获取到有效的access_token');
+        }
+        
       } catch (backendError) {
-        console.warn('后端调用失败，直接设置模拟token:', backendError.message);
+        console.warn('后端调用失败:', backendError.message);
+      }
+      
+      // 如果后端调用失败或没有获取到有效token，设置模拟token
+      if (!backendCallSuccess) {
+        console.log('设置模拟token作为回退方案...');
+        this._setMockAccessToken();
         
-        // 直接设置模拟token
-        this._accessToken = 'mock_access_token_' + Math.random().toString(36).substr(2, 32);
-        this._refreshToken = 'mock_refresh_token_' + Math.random().toString(36).substr(2, 32);
-        this._expiresAt = Date.now() + (7200 * 1000); // 2小时后过期
-        
-        console.log('模拟token设置完成');
+        console.log('模拟token设置完成，验证状态:', {
+          hasAccessToken: !!this._accessToken,
+          accessTokenLength: this._accessToken ? this._accessToken.length : 0,
+          tokenPrefix: this._accessToken ? this._accessToken.substring(0, 10) : 'null'
+        });
       }
       
       // 确保权限列表没有被意外覆盖
-      if (this._authorizedScopes.length === 0) {
+      if (!this._authorizedScopes || this._authorizedScopes.length === 0) {
         this._authorizedScopes = scopes && scopes.length > 0 ? scopes : ['ma.user.data', 'user_info', 'video.list', 'comment.list', 'message.list'];
         console.log('重新设置权限列表:', this._authorizedScopes);
       }
@@ -483,20 +501,43 @@ class DouyinAuth {
       // 立即保存状态
       this._saveToStorage();
       
-      console.log('模拟OAuth授权完成 - hasOAuthAuth:', this.hasOAuthAuth, 'scopes:', this._authorizedScopes, 'accessToken:', !!this._accessToken);
+      // 最终状态验证
+      const finalStatus = {
+        hasOAuthAuth: this.hasOAuthAuth,
+        scopes: this._authorizedScopes,
+        hasAccessToken: !!this._accessToken,
+        accessTokenLength: this._accessToken ? this._accessToken.length : 0
+      };
       
+      console.log('模拟OAuth授权完成，最终状态:', finalStatus);
+      
+      // 确保返回结果包含必要的信息
       return {
         success: true,
         scopes: this._authorizedScopes,
         accessToken: this._accessToken,
+        hasAccessToken: !!this._accessToken,
         ticket: mockTicket,
-        isRealData: false
+        isRealData: backendCallSuccess,
+        fallbackMode: !backendCallSuccess,
+        finalStatus: finalStatus
       };
       
     } catch (error) {
       console.error('模拟授权失败:', error);
       throw error;
     }
+  }
+
+  /**
+   * 设置模拟access_token的辅助方法
+   */
+  _setMockAccessToken() {
+    console.log('设置模拟access_token...');
+    this._accessToken = 'mock_access_token_' + Math.random().toString(36).substr(2, 32);
+    this._refreshToken = 'mock_refresh_token_' + Math.random().toString(36).substr(2, 32);
+    this._expiresAt = Date.now() + (7200 * 1000); // 2小时后过期
+    console.log('模拟token设置完成，token长度:', this._accessToken.length);
   }
 
   /**
@@ -890,11 +931,12 @@ class DouyinAuth {
     };
     
     if (options.body) {
-      config.body = JSON.stringify(options.body);
+      config.data = options.body; // 小程序使用data字段
+      config.body = JSON.stringify(options.body); // fetch使用body字段
     }
     
     try {
-      console.log('调用后端API:', url, config);
+      console.log('调用后端API:', url, '方法:', config.method, '数据:', options.body);
       
       // 检查是否在小程序环境中
       if (typeof tt !== 'undefined' && tt.request) {
@@ -907,30 +949,51 @@ class DouyinAuth {
           timeout: 15000 // 15秒超时
         });
         
-        console.log('小程序请求结果:', result);
+        console.log('小程序请求完整结果:', result);
+        console.log('HTTP状态码:', result.statusCode);
+        console.log('响应数据:', result.data);
         
-        if (result.statusCode === 200 && result.data) {
-          if (result.data.success) {
-            return result.data;
+        if (result.statusCode >= 200 && result.statusCode < 300) {
+          if (result.data && typeof result.data === 'object') {
+            if (result.data.success !== false) {
+              // 如果success字段不是false，就认为成功
+              return result.data;
+            } else {
+              throw new Error(result.data.message || '后端API返回错误');
+            }
           } else {
-            throw new Error(result.data.message || '后端API调用失败');
+            // 如果没有返回数据或数据格式不正确
+            console.warn('后端返回的数据格式异常:', result.data);
+            throw new Error('后端返回数据格式不正确');
           }
         } else {
-          throw new Error(`HTTP ${result.statusCode}: ${result.data?.message || '请求失败'}`);
+          throw new Error(`HTTP ${result.statusCode}: ${result.data?.message || result.errMsg || '请求失败'}`);
         }
       } else {
         // 开发环境使用fetch
         const response = await fetch(url, config);
         const data = await response.json();
         
-        if (data.success) {
-          return data;
+        console.log('Fetch请求结果:', response.status, data);
+        
+        if (response.ok) {
+          if (data.success !== false) {
+            return data;
+          } else {
+            throw new Error(data.message || '后端API返回错误');
+          }
         } else {
-          throw new Error(data.message || '后端API调用失败');
+          throw new Error(`HTTP ${response.status}: ${data.message || '请求失败'}`);
         }
       }
     } catch (error) {
       console.error('后端API调用失败:', error);
+      console.error('错误详情:', {
+        message: error.message,
+        errMsg: error.errMsg,
+        errNo: error.errNo,
+        statusCode: error.statusCode
+      });
       
       // 分析错误类型，提供更友好的错误信息
       let errorMsg = '后端API调用失败';
@@ -938,21 +1001,21 @@ class DouyinAuth {
       
       if (error.errMsg) {
         if (error.errMsg.includes('timeout') || error.errMsg.includes('连接超时')) {
-          errorMsg = isDevTools ? '网络连接超时' : '网络连接超时，真机环境下无法访问localhost后端服务';
+          errorMsg = `网络连接超时，无法访问服务器 ${baseUrl}`;
         } else if (error.errMsg.includes('fail') || error.errMsg.includes('network')) {
-          errorMsg = isDevTools ? '网络连接失败' : '网络连接失败，真机环境下无法访问localhost后端服务';
+          errorMsg = `网络连接失败，无法访问服务器 ${baseUrl}`;
+        } else if (error.errMsg.includes('ssl') || error.errMsg.includes('certificate')) {
+          errorMsg = `SSL证书验证失败，请检查服务器配置`;
         } else {
-          errorMsg = error.errMsg;
+          errorMsg = `网络请求失败: ${error.errMsg}`;
         }
       } else if (error.message) {
         errorMsg = error.message;
       }
       
-      console.warn('网络错误详情:', errorMsg);
-      
-      if (!isDevTools) {
-        console.log('真机环境下网络错误是正常的，将自动切换到模拟数据模式');
-      }
+      console.warn('最终错误信息:', errorMsg);
+      console.warn('请求的URL:', url);
+      console.warn('环境信息:', { isDevTools, baseUrl });
       
       throw new Error(errorMsg);
     }

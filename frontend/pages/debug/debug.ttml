@@ -59,11 +59,12 @@
     </view>
     
     <view class="button-group">
+      <button class="debug-button warning" bindtap="testDetailedConnection">详细连接测试</button>
       <button class="debug-button secondary" bindtap="testSimulateAuth">测试模拟授权</button>
-      <button class="debug-button secondary" bindtap="copyDebugInfo">复制信息</button>
     </view>
     
     <view class="button-group">
+      <button class="debug-button secondary" bindtap="copyDebugInfo">复制信息</button>
       <button class="debug-button danger" bindtap="clearAllData">清除所有数据</button>
     </view>
   </view>

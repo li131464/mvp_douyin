@@ -134,15 +134,65 @@ Page({
   },
 
   // 测试模拟授权
-  async testMockAuth() {
+  async testSimulateAuth() {
     try {
-      this.addLog('开始测试模拟授权...');
+      tt.showLoading({ title: '测试模拟授权...' });
+
+      console.log('开始测试模拟授权...');
+      console.log('授权前状态检查:', {
+        isLoggedIn: douyinAuth.isLoggedIn,
+        hasOAuthAuth: douyinAuth.hasOAuthAuth,
+        hasAccessToken: !!douyinAuth._accessToken,
+        authorizedScopes: douyinAuth.authorizedScopes
+      });
       
-      const result = await douyinAuth._simulateOAuthAuth(['user_info']);
-      this.addLog(`模拟授权成功: ${JSON.stringify(result)}`);
-      this.checkStatus();
+      const result = await douyinAuth._simulateOAuthAuth(['ma.user.data']);
+
+      console.log('模拟授权结果:', result);
+      console.log('授权后状态检查:', {
+        isLoggedIn: douyinAuth.isLoggedIn,
+        hasOAuthAuth: douyinAuth.hasOAuthAuth,
+        hasAccessToken: !!douyinAuth._accessToken,
+        accessTokenLength: douyinAuth._accessToken ? douyinAuth._accessToken.length : 0,
+        authorizedScopes: douyinAuth.authorizedScopes
+      });
+
+      tt.hideLoading();
+
+      if (result.success) {
+        const statusInfo = result.finalStatus || {
+          hasOAuthAuth: douyinAuth.hasOAuthAuth,
+          hasAccessToken: !!douyinAuth._accessToken,
+          accessTokenLength: douyinAuth._accessToken ? douyinAuth._accessToken.length : 0,
+          scopes: douyinAuth.authorizedScopes
+        };
+        
+        tt.showModal({
+          title: '模拟授权测试成功',
+          content: `✅ 测试结果：\n• 权限获取：${result.scopes.join(', ')}\n• 访问令牌：${statusInfo.hasAccessToken ? '已生成' : '未生成'}\n• Token长度：${statusInfo.accessTokenLength}\n• OAuth状态：${statusInfo.hasOAuthAuth ? '已授权' : '未授权'}\n• 数据来源：${result.isRealData ? '真实API' : '模拟数据'}\n• 回退模式：${result.fallbackMode ? '是' : '否'}`,
+          showCancel: false,
+          confirmText: '我知道了',
+          success: () => {
+            // 刷新调试信息
+            this.refreshDebugInfo();
+          }
+        });
+      } else {
+        tt.showModal({
+          title: '模拟授权测试失败',
+          content: '测试失败，请查看控制台日志了解详情',
+          showCancel: false
+        });
+      }
+
     } catch (error) {
-      this.addLog(`模拟授权失败: ${error.message}`);
+      tt.hideLoading();
+      console.error('模拟授权测试失败:', error);
+      tt.showModal({
+        title: '测试失败',
+        content: `错误信息：${error.message}\n\n请检查控制台日志获取更多详情。`,
+        showCancel: false
+      });
     }
   },
 
@@ -642,46 +692,6 @@ Page({
   },
 
   /**
-   * 测试模拟授权
-   */
-  async testSimulateAuth() {
-    try {
-      tt.showLoading({ title: '测试模拟授权...' });
-
-      console.log('开始测试模拟授权...');
-      const result = await douyinAuth._simulateOAuthAuth(['ma.user.data']);
-
-      tt.hideLoading();
-
-      if (result.success) {
-        tt.showModal({
-          title: '模拟授权成功',
-          content: `权限: ${result.scopes.join(', ')}\nToken: ${result.accessToken ? '已获取' : '未获取'}`,
-          showCancel: false
-        });
-
-        // 刷新调试信息
-        this.refreshDebugInfo();
-      } else {
-        tt.showModal({
-          title: '模拟授权失败',
-          content: '请查看控制台日志了解详情',
-          showCancel: false
-        });
-      }
-
-    } catch (error) {
-      tt.hideLoading();
-      console.error('模拟授权测试失败:', error);
-      tt.showModal({
-        title: '测试失败',
-        content: error.message,
-        showCancel: false
-      });
-    }
-  },
-
-  /**
    * 清除所有数据
    */
   clearAllData() {
@@ -797,6 +807,161 @@ Page({
       tt.showToast({
         title: 'API测试失败',
         icon: 'fail'
+      });
+    }
+  },
+
+  /**
+   * 详细的网络连接测试（新增）
+   */
+  async testDetailedConnection() {
+    try {
+      tt.showLoading({ title: '测试连接中...' });
+      
+      const baseUrl = 'http://kuzchat.cn:3090';
+      const testResults = [];
+      
+      // 测试1: 基础连接测试
+      testResults.push('=== 基础连接测试 ===');
+      try {
+        const result = await new Promise((resolve) => {
+          tt.request({
+            url: `${baseUrl}/health`,
+            method: 'GET',
+            timeout: 5000,
+            success: (res) => {
+              resolve({ success: true, data: res });
+            },
+            fail: (err) => {
+              resolve({ success: false, error: err });
+            }
+          });
+        });
+        
+        if (result.success) {
+          testResults.push(`✅ 基础连接成功`);
+          testResults.push(`状态码: ${result.data.statusCode}`);
+          testResults.push(`响应: ${JSON.stringify(result.data.data).substring(0, 100)}`);
+        } else {
+          testResults.push(`❌ 基础连接失败`);
+          testResults.push(`错误: ${result.error.errMsg}`);
+          testResults.push(`错误码: ${result.error.errNo || 'N/A'}`);
+        }
+      } catch (error) {
+        testResults.push(`❌ 基础连接异常: ${error.message}`);
+      }
+      
+      // 测试2: code2session接口测试
+      testResults.push('\n=== code2session接口测试 ===');
+      try {
+        const result = await new Promise((resolve) => {
+          tt.request({
+            url: `${baseUrl}/api/auth/code2session`,
+            method: 'POST',
+            data: { code: 'test_code_123' },
+            timeout: 10000,
+            success: (res) => {
+              resolve({ success: true, data: res });
+            },
+            fail: (err) => {
+              resolve({ success: false, error: err });
+            }
+          });
+        });
+        
+        if (result.success) {
+          testResults.push(`✅ code2session接口可访问`);
+          testResults.push(`状态码: ${result.data.statusCode}`);
+          const responseText = JSON.stringify(result.data.data).substring(0, 200);
+          testResults.push(`响应: ${responseText}`);
+        } else {
+          testResults.push(`❌ code2session接口失败`);
+          testResults.push(`错误: ${result.error.errMsg}`);
+        }
+      } catch (error) {
+        testResults.push(`❌ code2session接口异常: ${error.message}`);
+      }
+      
+      // 测试3: get-access-token接口测试
+      testResults.push('\n=== get-access-token接口测试 ===');
+      try {
+        const result = await new Promise((resolve) => {
+          tt.request({
+            url: `${baseUrl}/api/auth/get-access-token`,
+            method: 'POST',
+            data: { 
+              ticket: 'test_ticket_123',
+              openId: 'test_openid'
+            },
+            timeout: 10000,
+            success: (res) => {
+              resolve({ success: true, data: res });
+            },
+            fail: (err) => {
+              resolve({ success: false, error: err });
+            }
+          });
+        });
+        
+        if (result.success) {
+          testResults.push(`✅ get-access-token接口可访问`);
+          testResults.push(`状态码: ${result.data.statusCode}`);
+          const responseText = JSON.stringify(result.data.data).substring(0, 200);
+          testResults.push(`响应: ${responseText}`);
+        } else {
+          testResults.push(`❌ get-access-token接口失败`);
+          testResults.push(`错误: ${result.error.errMsg}`);
+        }
+      } catch (error) {
+        testResults.push(`❌ get-access-token接口异常: ${error.message}`);
+      }
+      
+      // 测试4: 系统信息
+      testResults.push('\n=== 系统信息 ===');
+      try {
+        const systemInfo = tt.getSystemInfoSync();
+        testResults.push(`平台: ${systemInfo.platform}`);
+        testResults.push(`系统: ${systemInfo.system}`);
+        testResults.push(`版本: ${systemInfo.version}`);
+        testResults.push(`网络类型: ${systemInfo.networkType || '未知'}`);
+      } catch (error) {
+        testResults.push(`❌ 获取系统信息失败: ${error.message}`);
+      }
+      
+      tt.hideLoading();
+      
+      // 显示测试结果
+      const resultText = testResults.join('\n');
+      console.log('详细连接测试结果:', resultText);
+      
+      tt.showModal({
+        title: '网络连接测试结果',
+        content: resultText.length > 500 ? resultText.substring(0, 500) + '...' : resultText,
+        showCancel: true,
+        confirmText: '复制结果',
+        cancelText: '关闭',
+        success: (res) => {
+          if (res.confirm) {
+            // 复制完整结果
+            if (tt.setClipboardData) {
+              tt.setClipboardData({
+                data: resultText,
+                success: () => {
+                  tt.showToast({ title: '已复制', icon: 'success' });
+                }
+              });
+            }
+          }
+        }
+      });
+      
+    } catch (error) {
+      tt.hideLoading();
+      console.error('连接测试失败:', error);
+      tt.showModal({
+        title: '测试失败',
+        content: `连接测试失败: ${error.message}`,
+        showCancel: false
       });
     }
   }

@@ -273,13 +273,19 @@ Page({
       if (result.success) {
         console.log('授权成功，结果:', result);
         
+        // 等待一小段时间确保状态保存完成
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         // 获取最新的OAuth状态，确保与底层对象同步
-        const hasOAuthAuth = Boolean(douyinAuth.hasOAuthAuth);
+        const hasOAuthAuth = douyinAuth.hasOAuthAuth;
         const authorizedScopes = douyinAuth.authorizedScopes || [];
+        const hasAccessToken = !!douyinAuth._accessToken;
         
         console.log('授权完成后状态更新:', {
           hasOAuthAuth,
           authorizedScopes,
+          hasAccessToken,
+          accessTokenLength: douyinAuth._accessToken ? douyinAuth._accessToken.length : 0,
           result,
           isFallback: result.fallbackMode || false
         });
@@ -290,28 +296,20 @@ Page({
           authorizedScopes: authorizedScopes
         });
         
-        // 根据授权结果显示不同的提示信息
+        // 根据是否为模拟模式显示不同的提示
         if (result.fallbackMode) {
-          // 模拟模式授权成功
           tt.showModal({
-            title: '授权成功',
-            content: `已获得用户数据权限（演示模式）\n\n原因：${result.fallbackReason || '网络连接问题'}\n\n您仍可以查看功能演示和使用模拟数据`,
+            title: '权限获取成功',
+            content: `已成功获取抖音数据访问权限！\n\n⚠️ 检测到网络连接问题，已自动启用演示模式。\n\n✅ 当前状态：\n• 权限范围：${authorizedScopes.join(', ')}\n• 访问令牌：已生成\n• 功能状态：完全可用\n\n您现在可以查看功能演示和使用模拟数据。`,
             showCancel: false,
-            confirmText: '我知道了'
-          });
-        } else if (!result.isRealData) {
-          // 开发环境模拟授权
-          tt.showModal({
-            title: '授权成功',
-            content: '已获得用户数据权限（开发模式）\n\n您可以查看功能演示和使用模拟数据',
-            showCancel: false,
-            confirmText: '我知道了'
+            confirmText: '开始使用'
           });
         } else {
-          // 真实授权成功
-          tt.showToast({
+          tt.showModal({
             title: '授权成功',
-            icon: 'success'
+            content: `已成功获取抖音数据访问权限！\n\n✅ 权限范围：${authorizedScopes.join(', ')}\n✅ 访问令牌：已获取\n✅ 数据来源：${result.isRealData ? '真实API' : '演示模式'}\n\n您现在可以查看和分析您的抖音数据。`,
+            showCancel: false,
+            confirmText: '开始使用'
           });
         }
       }
@@ -338,16 +336,27 @@ Page({
           console.log('尝试启用模拟授权模式...');
           const fallbackResult = await douyinAuth._simulateOAuthAuth(['ma.user.data']);
           
+          console.log('模拟授权结果:', fallbackResult);
+          
           if (fallbackResult.success) {
+            // 强制检查OAuth状态
+            const finalOAuthStatus = douyinAuth.hasOAuthAuth;
+            console.log('模拟授权后OAuth状态检查:', {
+              hasOAuthAuth: finalOAuthStatus,
+              hasAccessToken: !!douyinAuth._accessToken,
+              authorizedScopes: douyinAuth.authorizedScopes,
+              accessTokenLength: douyinAuth._accessToken ? douyinAuth._accessToken.length : 0
+            });
+            
             // 更新页面状态
             this.setData({
-              hasOAuthAuth: Boolean(douyinAuth.hasOAuthAuth),
+              hasOAuthAuth: finalOAuthStatus,
               authorizedScopes: douyinAuth.authorizedScopes || []
             });
             
             tt.showModal({
               title: '权限获取成功',
-              content: '检测到网络连接问题，已自动切换到演示模式。您可以查看功能演示和使用模拟数据。',
+              content: '检测到网络连接问题，已自动切换到演示模式。您可以查看功能演示和使用模拟数据。\n\n模拟状态信息：\n- 权限范围：ma.user.data\n- 访问令牌：已生成\n- 功能状态：完全可用',
               showCancel: false,
               confirmText: '我知道了'
             });
