@@ -12,7 +12,10 @@ const router = express.Router();
 const verifyAccessToken = asyncHandler(async (req, res, next) => {
   const { openId } = req.body;
   
+  logger.debug('验证access_token中间件，openId:', openId);
+  
   if (!openId) {
+    logger.warn('access_token验证失败：缺少openId参数');
     return res.status(400).json({
       success: false,
       message: '缺少openId参数',
@@ -24,7 +27,18 @@ const verifyAccessToken = asyncHandler(async (req, res, next) => {
   const tokenKey = `access_token:${openId}`;
   const tokenData = await cache.get(tokenKey);
   
+  logger.debug('从缓存获取token结果:', {
+    tokenKey: tokenKey,
+    hasToken: !!tokenData,
+    hasAccessToken: !!(tokenData && tokenData.access_token),
+    scope: tokenData ? tokenData.scope : null
+  });
+  
   if (!tokenData || !tokenData.access_token) {
+    logger.error('access_token验证失败：令牌无效或已过期', {
+      hasTokenData: !!tokenData,
+      hasAccessToken: !!(tokenData && tokenData.access_token)
+    });
     return res.status(401).json({
       success: false,
       message: '访问令牌无效或已过期',
@@ -34,6 +48,14 @@ const verifyAccessToken = asyncHandler(async (req, res, next) => {
   
   req.accessToken = tokenData.access_token;
   req.openId = openId;
+  req.tokenScope = tokenData.scope;
+  
+  logger.debug('access_token验证成功', {
+    openId: openId,
+    hasAccessToken: !!req.accessToken,
+    scope: req.tokenScope
+  });
+  
   next();
 });
 
@@ -43,9 +65,35 @@ const verifyAccessToken = asyncHandler(async (req, res, next) => {
  */
 router.post('/user-videos', verifyAccessToken, asyncHandler(async (req, res) => {
   const { cursor = 0, count = 20 } = req.body;
-  const { accessToken, openId } = req;
+  const { accessToken, openId, tokenScope } = req;
   
   logger.info('Get user videos request:', { openId, cursor, count });
+  logger.debug('Token scope:', tokenScope);
+  
+  // 检查权限scope
+  const requiredScopes = ['video.list.bind', 'data.external.item'];
+  const hasRequiredScope = requiredScopes.some(scope => {
+    if (typeof tokenScope === 'string') {
+      return tokenScope.includes(scope);
+    } else if (Array.isArray(tokenScope)) {
+      return tokenScope.includes(scope);
+    }
+    return false;
+  });
+  
+  if (!hasRequiredScope) {
+    logger.error('权限不足：缺少视频访问权限', { 
+      tokenScope: tokenScope, 
+      requiredScopes: requiredScopes 
+    });
+    return res.status(403).json({
+      success: false,
+      message: '权限不足，需要视频访问权限',
+      code: 'INSUFFICIENT_PERMISSIONS',
+      required_scopes: requiredScopes,
+      current_scope: tokenScope
+    });
+  }
   
   try {
     const result = await douyinApi.getUserVideos(accessToken, openId, cursor, count);
@@ -73,6 +121,18 @@ router.post('/user-videos', verifyAccessToken, asyncHandler(async (req, res) => 
     }
   } catch (error) {
     logger.error('Get user videos error:', error);
+    
+    // 判断是否是权限相关错误
+    if (error.response?.status === 401 || 
+        (error.message && error.message.includes('28001'))) {
+      return res.status(401).json({
+        success: false,
+        message: '访问令牌无效或权限不足',
+        code: 'TOKEN_OR_PERMISSION_ERROR',
+        details: error.message
+      });
+    }
+    
     res.status(500).json({
       success: false,
       message: '获取视频服务异常',

@@ -200,9 +200,22 @@ class DouyinAPI {
         allFields: Object.keys(response.data)
       });
       
-      // 缓存access_token
+      // 验证返回数据的完整性
+      if (!result.access_token) {
+        logger.warn('Real API returned incomplete data (missing access_token), falling back to mock mode');
+        return this._mockGetAccessToken(ticket, openId);
+      }
+      
+      // 缓存完整的token信息（与auth.js保持一致）
       const cacheKey = `access_token:${openId}`;
-      await cache.set(cacheKey, result.access_token, result.expires_in - 300); // 提前5分钟过期
+      const tokenData = {
+        access_token: result.access_token,
+        refresh_token: result.refresh_token,
+        expires_in: result.expires_in,
+        scope: result.scope,
+        created_at: Date.now()
+      };
+      await cache.set(cacheKey, tokenData, result.expires_in - 300); // 提前5分钟过期
       logger.debug('Access token cached with key:', cacheKey, 'expires in:', result.expires_in - 300, 'seconds');
       
       logger.info('Real Douyin API access token call successful');
@@ -252,9 +265,16 @@ class DouyinAPI {
         expires_in: response.data.expires_in || 7200
       };
       
-      // 更新缓存
+      // 更新缓存完整的token信息（与auth.js保持一致）
       const cacheKey = `access_token:${openId}`;
-      await cache.set(cacheKey, result.access_token, result.expires_in - 300);
+      const tokenData = {
+        access_token: result.access_token,
+        refresh_token: result.refresh_token,
+        expires_in: result.expires_in,
+        scope: result.scope || '',
+        created_at: Date.now()
+      };
+      await cache.set(cacheKey, tokenData, result.expires_in - 300);
       
       return result;
     } catch (error) {
@@ -274,33 +294,77 @@ class DouyinAPI {
       }
       
       logger.info('Attempting real Douyin API call for user videos');
-      
-      // 根据文档调用真实的抖音用户视频数据API
-      const response = await this.client.post('/data/external/user/item/', {
-        access_token: accessToken,
-        open_id: openId,
+      logger.debug('getUserVideos parameters:', {
+        openId: openId,
         cursor: cursor,
-        count: count
+        count: count,
+        hasAccessToken: !!accessToken
       });
       
-      if (response.data.error_code !== 0) {
-        throw new Error(`Douyin API Error: ${response.data.description}`);
+      // 按照官方文档调用视频列表API
+      // API文档：https://open.douyin.com/api/douyin/v1/video/video_list/
+      const response = await this.client.get('/api/douyin/v1/video/video_list/', {
+        params: {
+          open_id: openId,
+          cursor: cursor,
+          count: Math.min(count, 20) // 官方限制最大20
+        },
+        headers: {
+          'access-token': accessToken,
+          'content-type': 'application/json'
+        }
+      });
+      
+      logger.debug('Douyin video list API response:', {
+        status: response.status,
+        data: response.data
+      });
+      
+      // 检查响应格式
+      if (response.data.extra && response.data.extra.error_code !== 0) {
+        logger.error('Douyin API error:', {
+          error_code: response.data.extra.error_code,
+          description: response.data.extra.description,
+          sub_error_code: response.data.extra.sub_error_code,
+          sub_description: response.data.extra.sub_description
+        });
+        throw new Error(`Douyin API Error [${response.data.extra.error_code}]: ${response.data.extra.description}`);
       }
       
-      logger.info('Real Douyin API user videos call successful');
-      return {
+      const result = {
         success: true,
         data: response.data.data?.list || [],
-        cursor: response.data.data?.cursor || cursor + count,
+        cursor: response.data.data?.cursor || cursor,
         has_more: response.data.data?.has_more || false
       };
+      
+      logger.info('Real Douyin API user videos call successful:', {
+        videoCount: result.data.length,
+        cursor: result.cursor,
+        hasMore: result.has_more
+      });
+      
+      return result;
     } catch (error) {
-      logger.warn('Real Douyin API user videos call failed, falling back to mock mode:', {
+      logger.error('Real Douyin API user videos call failed:', {
         message: error.message,
         status: error.response?.status,
-        data: error.response?.data
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url,
+        method: error.config?.method,
+        headers: error.config?.headers
       });
-      // 回退到模拟模式
+      
+      // 如果是权限相关错误，不要回退到mock模式，直接抛出错误
+      if (error.response?.status === 401 || 
+          (error.response?.data?.extra?.error_code && 
+           [28001003, 28001008, 28001014, 28001018, 28001019].includes(error.response.data.extra.error_code))) {
+        throw error;
+      }
+      
+      // 其他错误回退到模拟模式
+      logger.warn('Falling back to mock mode due to API error');
       return this._mockGetUserVideos(cursor, count);
     }
   }
@@ -414,7 +478,7 @@ class DouyinAPI {
       access_token: `mock_access_token_${Math.random().toString(36).substr(2, 32)}`,
       refresh_token: `mock_refresh_token_${Math.random().toString(36).substr(2, 32)}`,
       expires_in: 7200,
-      scope: 'user_info,video.list,comment.list,message.list'
+      scope: 'user_info,video.list.bind,comment.list,message.list,data.external.item'
     };
     
     logger.debug('Mock getAccessToken result:', {

@@ -331,40 +331,8 @@ Page({
         // 网络连接失败，可能是真机环境
         console.log('网络连接失败，可能是真机环境无法访问localhost');
         
-        // 尝试启用模拟模式作为备选方案
-        try {
-          console.log('尝试启用模拟授权模式...');
-          const fallbackResult = await douyinAuth._simulateOAuthAuth(['ma.user.data']);
-          
-          console.log('模拟授权结果:', fallbackResult);
-          
-          if (fallbackResult.success) {
-            // 强制检查OAuth状态
-            const finalOAuthStatus = douyinAuth.hasOAuthAuth;
-            console.log('模拟授权后OAuth状态检查:', {
-              hasOAuthAuth: finalOAuthStatus,
-              hasAccessToken: !!douyinAuth._accessToken,
-              authorizedScopes: douyinAuth.authorizedScopes,
-              accessTokenLength: douyinAuth._accessToken ? douyinAuth._accessToken.length : 0
-            });
-            
-            // 更新页面状态
-            this.setData({
-              hasOAuthAuth: finalOAuthStatus,
-              authorizedScopes: douyinAuth.authorizedScopes || []
-            });
-            
-            tt.showModal({
-              title: '权限获取成功',
-              content: '检测到网络连接问题，已自动切换到演示模式。您可以查看功能演示和使用模拟数据。\n\n模拟状态信息：\n- 权限范围：ma.user.data\n- 访问令牌：已生成\n- 功能状态：完全可用',
-              showCancel: false,
-              confirmText: '我知道了'
-            });
-            return;
-          }
-        } catch (fallbackError) {
-          console.error('模拟授权也失败了:', fallbackError);
-        }
+        // 禁止使用模拟授权，直接显示网络错误
+        console.log('网络连接失败，模拟授权已被禁用');
         
         tt.showModal({
           title: '网络连接失败',

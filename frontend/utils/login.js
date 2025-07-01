@@ -12,9 +12,9 @@ function getBackendApiBase() {
     // 开发者工具环境 - 使用HTTP
     return 'http://kuzchat.cn:3090'; 
   } else {
-    // 真机环境 - 抖音小程序通常要求HTTPS
-    // 但如果服务器没有SSL证书，会自动在代码中回退到HTTP
-    return 'https://kuzchat.cn:3090';
+    // 真机环境 - 服务器目前使用HTTP
+    // 注意：生产环境建议配置HTTPS
+    return 'http://kuzchat.cn:3090';
   }
 }
 
@@ -116,8 +116,8 @@ class DouyinAuth {
       
       // 检查是否在抖音环境中
       if (typeof tt === 'undefined' || !tt.showDouyinOpenAuth) {
-        // 开发环境模拟授权
-        return await this._simulateOAuthAuth(scopes);
+        // 抖音环境检查失败，直接抛出错误
+        throw new Error('OAuth授权失败：不在抖音小程序环境中或API不可用');
       }
       
       // 使用抖音小程序的真实授权API
@@ -170,35 +170,20 @@ class DouyinAuth {
           };
           
         } catch (tokenError) {
-          console.warn('后端获取access_token失败，回退到模拟模式:', tokenError.message);
+          console.error('后端获取access_token失败:', tokenError.message);
           
-          // 如果后端调用失败（比如网络问题），回退到模拟模式
-          console.log('设置模拟OAuth状态...');
-          this._setMockAccessToken();
-          
-          // 设置授权的权限列表
-          this._authorizedScopes = authResult.grantPermissions || scopes;
-          
-          // 立即保存状态到存储
-          this._saveToStorage();
-          
-          console.log('模拟OAuth授权设置完成 - hasOAuthAuth:', this.hasOAuthAuth);
-          console.log('模拟权限:', this._authorizedScopes);
-          console.log('模拟Token状态:', {
-            hasAccessToken: !!this._accessToken,
-            tokenLength: this._accessToken ? this._accessToken.length : 0,
-            hasOAuthAuth: this.hasOAuthAuth
-          });
-          
-          return {
-            success: true,
-            scopes: this._authorizedScopes,
-            accessToken: this._accessToken,
-            ticket: authCode,
-            isRealData: false,
-            fallbackMode: true,
-            fallbackReason: tokenError.message
+          // 禁止使用模拟授权，直接抛出错误
+          const errorDetail = {
+            type: 'ACCESS_TOKEN_ERROR',
+            authCode: authCode,
+            originalError: tokenError.message,
+            timestamp: new Date().toISOString(),
+            scopes: scopes
           };
+          
+          console.error('access_token获取失败，详细错误信息:', errorDetail);
+          
+          throw new Error(`获取access_token失败: ${tokenError.message}`);
         }
         
       } catch (authError) {
@@ -241,20 +226,37 @@ class DouyinAuth {
       } else if (error.message && error.message.includes('未获取到授权')) {
         throw error;
       } else {
-        // 对于其他错误，根据环境决定处理方式
-        if (this._isDevTools()) {
-          console.log('开发者工具环境中的授权失败，尝试模拟授权模式');
-          return await this._simulateOAuthAuth(scopes);
-        } else {
-          console.log('真机环境中的授权失败，尝试模拟授权模式作为回退方案');
-          // 在真机环境中，如果授权失败，我们仍然可以尝试模拟模式作为回退方案
-          try {
-            return await this._simulateOAuthAuth(scopes);
-          } catch (simError) {
-            console.error('模拟授权也失败了:', simError);
-            throw new Error(`OAuth授权失败：${error.message || error.errMsg}，模拟模式也不可用`);
-          }
+        // 禁止使用模拟授权，直接抛出详细错误信息
+        const errorDetail = {
+          errMsg: error.errMsg,
+          errNo: error.errNo,
+          message: error.message,
+          isDevTools: this._isDevTools(),
+          timestamp: new Date().toISOString(),
+          scopes: scopes,
+          stackTrace: error.stack
+        };
+        
+        console.error('OAuth授权失败，详细错误信息:', errorDetail);
+        
+        let errorMessage = 'OAuth授权失败';
+        if (error.errNo) {
+          errorMessage += ` (错误码: ${error.errNo})`;
         }
+        if (error.errMsg) {
+          errorMessage += `: ${error.errMsg}`;
+        } else if (error.message) {
+          errorMessage += `: ${error.message}`;
+        }
+        
+        // 根据环境提供不同的说明
+        if (this._isDevTools()) {
+          errorMessage += ' - 开发者工具环境';
+        } else {
+          errorMessage += ' - 真机环境';
+        }
+        
+        throw new Error(errorMessage);
       }
     }
   }
@@ -459,7 +461,7 @@ class DouyinAuth {
       console.log('生成模拟票据:', mockTicket);
       
       // 先设置预期的权限列表
-      this._authorizedScopes = scopes && scopes.length > 0 ? scopes : ['ma.user.data', 'user_info', 'video.list', 'comment.list', 'message.list'];
+      this._authorizedScopes = scopes && scopes.length > 0 ? scopes : ['ma.user.data', 'user_info', 'video.list.bind', 'comment.list', 'message.list', 'data.external.item'];
       console.log('预设权限列表:', this._authorizedScopes);
       
       // 尝试调用后端API获取access_token，如果失败则直接设置模拟token
@@ -494,7 +496,7 @@ class DouyinAuth {
       
       // 确保权限列表没有被意外覆盖
       if (!this._authorizedScopes || this._authorizedScopes.length === 0) {
-        this._authorizedScopes = scopes && scopes.length > 0 ? scopes : ['ma.user.data', 'user_info', 'video.list', 'comment.list', 'message.list'];
+        this._authorizedScopes = scopes && scopes.length > 0 ? scopes : ['ma.user.data', 'user_info', 'video.list.bind', 'comment.list', 'message.list', 'data.external.item'];
         console.log('重新设置权限列表:', this._authorizedScopes);
       }
       
@@ -614,7 +616,7 @@ class DouyinAuth {
     
     // 设置模拟的权限范围
     if (this._authorizedScopes.length === 0) {
-      this._authorizedScopes = ['ma.user.data', 'user_info', 'video.list', 'comment.list', 'message.list'];
+      this._authorizedScopes = ['ma.user.data', 'user_info', 'video.list.bind', 'comment.list', 'message.list', 'data.external.item'];
       console.log('设置模拟权限范围:', this._authorizedScopes);
     }
     

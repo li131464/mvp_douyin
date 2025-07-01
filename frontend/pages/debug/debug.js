@@ -146,7 +146,8 @@ Page({
         authorizedScopes: douyinAuth.authorizedScopes
       });
       
-      const result = await douyinAuth._simulateOAuthAuth(['ma.user.data']);
+      // 模拟授权已被禁用，直接抛出错误
+      throw new Error('模拟授权功能已被禁用，请使用真实的OAuth授权流程');
 
       console.log('模拟授权结果:', result);
       console.log('授权后状态检查:', {
@@ -258,7 +259,7 @@ Page({
   async testDifferentScopes() {
     const scopeTests = [
       { name: '抖音主页数据', scopes: ['ma.user.data'] },
-      { name: '视频数据查询', scopes: ['ma.video.bind'] },
+              { name: '视频数据查询', scopes: ['video.list.bind', 'data.external.item'] },
       { name: '近30天视频数据', scopes: ['ma.item.data'] },
       { name: '视频评论数据', scopes: ['ma.item.comment'] }
     ];
