@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+当前的代码全部都是本地端的，我保持了本地backend文件夹与远程服务器的backend文件夹一致，所以如果我说远程服务器有什么问题，你就修改本地的backend文件夹（路径：E:\code\kuz_ai\MVP_douyin\backend）即可，修改完毕后，我会原封不动的把你改好的本地文件覆盖远程服务器

@@ -69,3 +69,124 @@
 {"level":"info","message":"Attempting real Douyin API call for access token","service":"douyin-miniapp-backend","timestamp":"2025-06-27 13:57:24"}
 {"level":"info","message":"Real Douyin API access token call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-27 13:57:24"}
 {"level":"info","message":"Get access token success:","openId":"mock_openid_mz8jo8inm","service":"douyin-miniapp-backend","timestamp":"2025-06-27 13:57:24"}
+{"level":"info","message":"Server is running on port 3000","service":"douyin-miniapp-backend","timestamp":"2025-06-27 15:37:05"}
+{"level":"info","message":"Environment: development","service":"douyin-miniapp-backend","timestamp":"2025-06-27 15:37:05"}
+{"level":"info","message":"Health check: http://localhost:3000/health","service":"douyin-miniapp-backend","timestamp":"2025-06-27 15:37:05"}
+{"code":"PHNh7mQJ0lpKeKDAw5414Vwx8sbHa6EbKwzCXTKJEaCijjvdyeWCWka6hIXvhoJT_2uhkbGIyZKopEfLWHLYoj9DVlSzboBGzyZ1AEoCM1XqNc3TKDdXi6SMyWU","level":"info","message":"Code2session request:","service":"douyin-miniapp-backend","timestamp":"2025-06-27 15:43:34"}
+{"level":"info","message":"Attempting real Douyin API call for code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-27 15:43:34"}
+{"level":"info","message":"Real Douyin API call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-27 15:43:34"}
+{"level":"info","message":"Real API response data:","service":"douyin-miniapp-backend","timestamp":"2025-06-27 15:43:34"}
+{"level":"warn","message":"Real API returned incomplete data, falling back to mock","service":"douyin-miniapp-backend","timestamp":"2025-06-27 15:43:34"}
+{"level":"info","message":"Using mock code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-27 15:43:34"}
+{"level":"info","message":"Code2session success:","openid":"mock_openid_f53a2el9s","service":"douyin-miniapp-backend","timestamp":"2025-06-27 15:43:34"}
+{"level":"info","message":"Get access token request:","openId":"mock_openid_f53a2el9s","service":"douyin-miniapp-backend","ticket":"mock_ticket_1751010217490_7vzwjmfqo","timestamp":"2025-06-27 15:43:37"}
+{"level":"info","message":"Attempting real Douyin API call for access token","service":"douyin-miniapp-backend","timestamp":"2025-06-27 15:43:37"}
+{"level":"info","message":"Real Douyin API access token call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-27 15:43:37"}
+{"level":"info","message":"Get access token success:","openId":"mock_openid_f53a2el9s","service":"douyin-miniapp-backend","timestamp":"2025-06-27 15:43:37"}
+{"code":"Gh1TO2LdVpMZNVhDYdb-SvjT3rg_wkDBOl56SCQVxuCOd9PHJQ9utluP9Zk3dZaHvIS0U4dD0LMzokn-Hee5z2LxKsUwTm-Hjw-Idmx8tCqwnJZ9ejrHCfGRmRQ","level":"info","message":"Code2session request:","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:10:50"}
+{"level":"info","message":"Attempting real Douyin API call for code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:10:50"}
+{"level":"info","message":"Real Douyin API call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:10:50"}
+{"level":"info","message":"Real API response data:","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:10:50"}
+{"level":"warn","message":"Real API returned incomplete data, falling back to mock","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:10:50"}
+{"level":"info","message":"Using mock code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:10:50"}
+{"level":"info","message":"Code2session success:","openid":"mock_openid_ew3jbgzwz","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:10:50"}
+{"code":"ZVG-wL64hJzMbYj0bdgxKy3eQNV6sgbrZuUiIWmyX7_jQYTa3lYpGxVTcKCNAvM7NL8TkDQBAAPUKD5_x3krTqWIK7XKbetfNPv7MQXrGgOLHsFktyVPWa2kJ2I","level":"info","message":"Code2session request:","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:11:01"}
+{"level":"info","message":"Attempting real Douyin API call for code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:11:01"}
+{"level":"info","message":"Real Douyin API call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:11:02"}
+{"level":"info","message":"Real API response data:","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:11:02"}
+{"level":"warn","message":"Real API returned incomplete data, falling back to mock","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:11:02"}
+{"level":"info","message":"Using mock code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:11:02"}
+{"level":"info","message":"Code2session success:","openid":"mock_openid_dhiud494o","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:11:02"}
+{"code":"AUotKiQqefAlSYskDbluemhPHM0h0iyKKQsQ_c6MLIK3dPQ5q4GazBpP0WBXHCsZUaMGG2_3yosBMlFeihGvtxyREvWkZtqCimDoP15o3HuMVTTpStKyOLqA1gE","level":"info","message":"Code2session request:","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:20:01"}
+{"level":"info","message":"Attempting real Douyin API call for code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:20:01"}
+{"level":"info","message":"Real Douyin API call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:20:01"}
+{"level":"info","message":"Real API response data:","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:20:01"}
+{"level":"warn","message":"Real API returned incomplete data, falling back to mock","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:20:01"}
+{"level":"info","message":"Using mock code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:20:01"}
+{"level":"info","message":"Code2session success:","openid":"mock_openid_ppuj0knm1","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:20:01"}
+{"code":"oQN5apdhe_3d4DQFzIMcR9KheCXbP7rFztpOETBlWr27_2UHkEfsTzE0XPsIbZSjwXVNr-nvtNaOfjpXnrZ4krlO3-WTDkOgTAaOHhPj0oLeKGxthef8nZJGzW0","level":"info","message":"Code2session request:","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:20:17"}
+{"level":"info","message":"Attempting real Douyin API call for code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:20:17"}
+{"level":"info","message":"Real Douyin API call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:20:18"}
+{"level":"info","message":"Real API response data:","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:20:18"}
+{"level":"warn","message":"Real API returned incomplete data, falling back to mock","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:20:18"}
+{"level":"info","message":"Using mock code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:20:18"}
+{"level":"info","message":"Code2session success:","openid":"mock_openid_9utev6jyn","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:20:18"}
+{"code":"B_2pyQK-SZ8z8tOU7KwD8r8xMq8JgtU6406LtD7FQoZDmYysbLpJWrT4tufpLISHFGYDcqIwKDFb_6qY6BO09cFxmCuXPlM-tPaTnhdd5-oNnN7953dMcKaE6K8","level":"info","message":"Code2session request:","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:25:07"}
+{"level":"info","message":"Attempting real Douyin API call for code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:25:07"}
+{"level":"info","message":"Real Douyin API call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:25:07"}
+{"level":"info","message":"Real API response data:","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:25:07"}
+{"level":"warn","message":"Real API returned incomplete data, falling back to mock","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:25:07"}
+{"level":"info","message":"Using mock code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:25:07"}
+{"level":"info","message":"Code2session success:","openid":"mock_openid_otn03lsw7","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:25:07"}
+{"code":"Iw9XwYP_jrUaDRIBgM7Dgx5Pb_OL4tyeVg-xGQBt1lqulBl5SIFTLKqwoRcy1eknrWJ7bE_GCT8V4j1nWVcQbvryNRyBcraE0p7eGOgPYAnBt52cM-QD4oEZOFQ","level":"info","message":"Code2session request:","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:25:36"}
+{"level":"info","message":"Attempting real Douyin API call for code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:25:36"}
+{"level":"info","message":"Real Douyin API call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:25:37"}
+{"level":"info","message":"Real API response data:","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:25:37"}
+{"level":"warn","message":"Real API returned incomplete data, falling back to mock","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:25:37"}
+{"level":"info","message":"Using mock code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:25:37"}
+{"level":"info","message":"Code2session success:","openid":"mock_openid_8q4nwredr","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:25:37"}
+{"code":"TsO7rmXB_W-Y8zl80GoHv49pf-ByqCO6zaLqfq1NoeLZL1eRQgprlw8xFIwgXbx4NZHDyRcWIwUBx0ITecemnXipGSHB230brcCEWJDwBcnN0r6PaM9RNyOP0LM","level":"info","message":"Code2session request:","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:27:10"}
+{"level":"info","message":"Attempting real Douyin API call for code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:27:10"}
+{"level":"info","message":"Real Douyin API call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:27:10"}
+{"level":"info","message":"Real API response data:","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:27:10"}
+{"level":"warn","message":"Real API returned incomplete data, falling back to mock","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:27:10"}
+{"level":"info","message":"Using mock code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:27:10"}
+{"level":"info","message":"Code2session success:","openid":"mock_openid_jxvfmchcc","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:27:10"}
+{"level":"info","message":"Get access token request:","openId":"mock_openid_jxvfmchcc","service":"douyin-miniapp-backend","ticket":"mock_ticket_1751012834659_795116r20","timestamp":"2025-06-27 16:27:14"}
+{"level":"info","message":"Attempting real Douyin API call for access token","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:27:14"}
+{"level":"info","message":"Real Douyin API access token call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:27:14"}
+{"level":"info","message":"Get access token success:","openId":"mock_openid_jxvfmchcc","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:27:14"}
+{"code":"2xFCl2Gdjm9WsS8R11bi36SGpMxvpRuz_RvY8h19rcAl_66UfUlLHa1p-84jT1P441PSatkknZRrvExqao8TcO0A78dMTCr9VKRvQqTfszCY34mv2qrUKUYVj5E","level":"info","message":"Code2session request:","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:30:02"}
+{"level":"info","message":"Attempting real Douyin API call for code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:30:02"}
+{"level":"info","message":"Real Douyin API call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:30:02"}
+{"level":"info","message":"Real API response data:","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:30:02"}
+{"level":"warn","message":"Real API returned incomplete data, falling back to mock","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:30:02"}
+{"level":"info","message":"Using mock code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:30:02"}
+{"level":"info","message":"Code2session success:","openid":"mock_openid_74i5ya6gw","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:30:02"}
+{"level":"info","message":"Get access token request:","openId":"mock_openid_74i5ya6gw","service":"douyin-miniapp-backend","ticket":"mock_ticket_1751013005201_273kj2x44","timestamp":"2025-06-27 16:30:05"}
+{"level":"info","message":"Attempting real Douyin API call for access token","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:30:05"}
+{"level":"info","message":"Real Douyin API access token call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:30:05"}
+{"level":"info","message":"Get access token success:","openId":"mock_openid_74i5ya6gw","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:30:05"}
+{"level":"info","message":"Get access token request:","openId":"mock_openid_74i5ya6gw","service":"douyin-miniapp-backend","ticket":"mock_ticket_1751013588150_mz706gb9n","timestamp":"2025-06-27 16:39:48"}
+{"level":"info","message":"Attempting real Douyin API call for access token","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:39:48"}
+{"level":"info","message":"Real Douyin API access token call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:39:48"}
+{"level":"info","message":"Get access token success:","openId":"mock_openid_74i5ya6gw","service":"douyin-miniapp-backend","timestamp":"2025-06-27 16:39:48"}
+{"code":"17xNXUQNVjme2E0vt6lFRbg4FmHd4G4fBaSzymXQr-wtebO82l2SlroyQknVPJio9s76o_xV-Qpf_raqtLhsblkhapsnBTdXD7SesMzCvUIcJpE3zcMwKgGcJc4","level":"info","message":"Code2session request:","service":"douyin-miniapp-backend","timestamp":"2025-06-27 17:35:03"}
+{"level":"info","message":"Attempting real Douyin API call for code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-27 17:35:03"}
+{"level":"info","message":"Real Douyin API call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-27 17:35:04"}
+{"level":"info","message":"Real API response data:","service":"douyin-miniapp-backend","timestamp":"2025-06-27 17:35:04"}
+{"level":"warn","message":"Real API returned incomplete data, falling back to mock","service":"douyin-miniapp-backend","timestamp":"2025-06-27 17:35:04"}
+{"level":"info","message":"Using mock code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-27 17:35:04"}
+{"level":"info","message":"Code2session success:","openid":"mock_openid_lgqymb2pt","service":"douyin-miniapp-backend","timestamp":"2025-06-27 17:35:04"}
+{"level":"info","message":"Get access token request:","openId":"mock_openid_lgqymb2pt","service":"douyin-miniapp-backend","ticket":"mock_ticket_1751016907911_4i457zf27","timestamp":"2025-06-27 17:35:07"}
+{"level":"info","message":"Attempting real Douyin API call for access token","service":"douyin-miniapp-backend","timestamp":"2025-06-27 17:35:07"}
+{"level":"info","message":"Real Douyin API access token call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-27 17:35:08"}
+{"level":"info","message":"Get access token success:","openId":"mock_openid_lgqymb2pt","service":"douyin-miniapp-backend","timestamp":"2025-06-27 17:35:08"}
+{"level":"info","message":"Server is running on port 3000","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:10:12"}
+{"level":"info","message":"Environment: development","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:10:12"}
+{"level":"info","message":"Health check: http://localhost:3000/health","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:10:12"}
+{"code":"9L7rm_hMaY5GDIuM9ho65dP2w3B6grkWGWmctVAyjprvHWybU8CZfzDSipChYci9rV_z9FUzoCdMBHGR7Kwvs0pAhMLYXw8Z04iLTvFcVZr8FlCp6WdKGo3qkTI","level":"info","message":"Code2session request:","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:11:05"}
+{"level":"info","message":"Attempting real Douyin API call for code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:11:06"}
+{"level":"info","message":"Real Douyin API call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:11:06"}
+{"level":"info","message":"Real API response data:","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:11:06"}
+{"level":"warn","message":"Real API returned incomplete data, falling back to mock","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:11:06"}
+{"level":"info","message":"Using mock code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:11:06"}
+{"level":"info","message":"Code2session success:","openid":"mock_openid_6avfznam0","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:11:06"}
+{"level":"info","message":"Get access token request:","openId":"mock_openid_6avfznam0","service":"douyin-miniapp-backend","ticket":"mock_ticket_1751263876919_xbn46w5wy","timestamp":"2025-06-30 14:11:16"}
+{"level":"info","message":"Attempting real Douyin API call for access token","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:11:16"}
+{"level":"info","message":"Real Douyin API access token call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:11:17"}
+{"level":"info","message":"Get access token success:","openId":"mock_openid_6avfznam0","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:11:17"}
+{"code":"vtKjtj3Q_NTc7xGxMOL5-qWSquoRFFwg2Y-UFA5rX1b3T2QgKf5lgA6BBxqQMr43HQR9sM2gSC5BWrYIzFItkyysjRWC7FH7yAB5JgKqCxPfWozszrMhd60_TPw","level":"info","message":"Code2session request:","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:36:23"}
+{"level":"info","message":"Attempting real Douyin API call for code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:36:23"}
+{"level":"info","message":"Real Douyin API call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:36:24"}
+{"level":"info","message":"Real API response data:","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:36:24"}
+{"level":"warn","message":"Real API returned incomplete data, falling back to mock","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:36:24"}
+{"level":"info","message":"Using mock code2session","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:36:24"}
+{"level":"info","message":"Code2session success:","openid":"mock_openid_k8iskz0xd","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:36:24"}
+{"level":"info","message":"Get access token request:","openId":"mock_openid_k8iskz0xd","service":"douyin-miniapp-backend","ticket":"mock_ticket_1751265391325_zx4k5e0ne","timestamp":"2025-06-30 14:36:31"}
+{"level":"info","message":"Attempting real Douyin API call for access token","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:36:31"}
+{"level":"info","message":"Real Douyin API access token call successful","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:36:31"}
+{"level":"info","message":"Get access token success:","openId":"mock_openid_k8iskz0xd","service":"douyin-miniapp-backend","timestamp":"2025-06-30 14:36:31"}
+{"level":"info","message":"Server is running on port 3090","service":"douyin-miniapp-backend","timestamp":"2025-06-30 17:42:56"}
+{"level":"info","message":"Environment: development","service":"douyin-miniapp-backend","timestamp":"2025-06-30 17:42:56"}
+{"level":"info","message":"Health check: http://localhost:3090/health","service":"douyin-miniapp-backend","timestamp":"2025-06-30 17:42:56"}

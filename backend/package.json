@@ -5,8 +5,12 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
+    "start-win": "node app.js 2>&1 | more",
     "dev": "nodemon app.js",
-    "test": "jest"
+    "test": "jest",
+    "logs": "type logs\\combined.log",
+    "logs-live": "powershell Get-Content logs\\combined.log -Wait",
+    "start-with-logs": "node app.js"
   },
   "keywords": [
     "douyin",

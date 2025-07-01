@@ -10,24 +10,21 @@ const douyinRoutes = require('./routes/douyin');
 const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3090;
 
 // 安全中间件
 app.use(helmet());
 
-// CORS配置
+// CORS配置 - 支持小程序和跨域请求
 const corsOptions = {
   origin: function (origin, callback) {
-    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['*'];
-    if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+    // 允许所有来源，包括小程序请求（小程序请求可能没有origin）
+    callback(null, true);
   },
-  credentials: true,
+  credentials: false, // 小程序不需要凭据
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200 // 兼容老版本浏览器
 };
 
 app.use(cors(corsOptions));
@@ -55,8 +52,59 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
     timestamp: new Date().toISOString(),
-    version: require('./package.json').version
+    version: require('./package.json').version,
+    port: PORT,
+    env: process.env.NODE_ENV || 'development'
   });
+});
+
+// 调试端点 - 返回服务器配置信息
+app.get('/api/debug/info', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      timestamp: new Date().toISOString(),
+      server: {
+        port: PORT,
+        env: process.env.NODE_ENV || 'development',
+        version: require('./package.json').version
+      },
+      config: {
+        hasAppId: !!process.env.DOUYIN_APP_ID,
+        hasAppSecret: !!process.env.DOUYIN_APP_SECRET,
+        appId: process.env.DOUYIN_APP_ID ? `${process.env.DOUYIN_APP_ID.substring(0, 6)}***` : 'not configured',
+        apiBaseUrl: process.env.DOUYIN_API_BASE_URL
+      },
+      request: {
+        userAgent: req.get('User-Agent'),
+        origin: req.get('Origin'),
+        ip: req.ip,
+        method: req.method
+      }
+    }
+  });
+});
+
+// 添加请求日志中间件
+app.use((req, res, next) => {
+  const start = Date.now();
+  const userAgent = req.get('User-Agent') || 'Unknown';
+  const origin = req.get('Origin') || 'No-Origin';
+  
+  logger.info(`${req.method} ${req.url}`, {
+    ip: req.ip,
+    userAgent: userAgent.substring(0, 100), // 截取前100字符
+    origin,
+    contentType: req.get('Content-Type')
+  });
+
+  // 响应完成时记录日志
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    logger.info(`Response: ${req.method} ${req.url} - ${res.statusCode} (${duration}ms)`);
+  });
+
+  next();
 });
 
 // API路由
@@ -75,22 +123,43 @@ app.use('*', (req, res) => {
 // 错误处理中间件
 app.use(errorHandler);
 
-// 启动服务器
-app.listen(PORT, () => {
-  logger.info(`Server is running on port ${PORT}`);
-  logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  logger.info(`Health check: http://localhost:${PORT}/health`);
+const server = app.listen(PORT, () => {
+  logger.info(`服务器启动成功，监听端口: ${PORT}`);
+  logger.info(`服务器地址: http://localhost:${PORT}`);
+  logger.info(`环境: ${process.env.NODE_ENV || 'development'}`);
+  logger.info(`日志级别: ${process.env.LOG_LEVEL || 'info'}`);
+  logger.info(`抖音API配置: ${process.env.DOUYIN_APP_ID ? '已配置' : '未配置(使用模拟模式)'}`);
+  logger.info('========================================');
+  logger.info('服务器已启动完成，等待客户端连接...');
+  logger.info('========================================');
+  
+  // 启动时显示日志监控提示
+  console.log('\n==================== 服务器启动成功 ====================');
+  console.log(`🚀 服务器已启动，监听端口: ${PORT}`);
+  console.log(`🌐 服务器地址: http://localhost:${PORT}`);
+  console.log(`📊 环境: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📝 日志级别: ${process.env.LOG_LEVEL || 'info'}`);
+  console.log(`🔑 抖音API: ${process.env.DOUYIN_APP_ID ? '已配置' : '未配置(使用模拟模式)'}`);
+  console.log('========================================');
+  console.log('📋 实时日志监控已启用，服务器请求将在下方显示...');
+  console.log('========================================\n');
 });
 
-// 优雅关闭
+// 优雅关闭处理
 process.on('SIGTERM', () => {
-  logger.info('SIGTERM received, shutting down gracefully');
-  process.exit(0);
+  logger.info('收到SIGTERM信号，正在关闭服务器...');
+  server.close(() => {
+    logger.info('服务器已关闭');
+    process.exit(0);
+  });
 });
 
 process.on('SIGINT', () => {
-  logger.info('SIGINT received, shutting down gracefully');
-  process.exit(0);
+  logger.info('收到SIGINT信号，正在关闭服务器...');
+  server.close(() => {
+    logger.info('服务器已关闭');
+    process.exit(0);
+  });
 });
 
 module.exports = app; 

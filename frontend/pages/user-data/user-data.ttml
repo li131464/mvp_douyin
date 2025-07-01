@@ -12,7 +12,10 @@
   <!-- 用户信息 -->
   <view class="user-info" tt:if="{{userInfo}}">
     <image class="avatar" src="{{userInfo.avatarUrl}}" mode="aspectFill"></image>
-    <text class="nickname">{{userInfo.nickName}}</text>
+    <view class="user-details">
+      <text class="nickname">{{userInfo.nickName}}</text>
+      <text class="data-source">{{dataSource}}</text>
+    </view>
   </view>
 
   <!-- 标签页导航 -->
@@ -79,7 +82,10 @@
       <!-- 视频列表为空 -->
       <view class="empty-state" tt:if="{{videos.length === 0 && !videoLoading}}">
         <text class="empty-icon">📹</text>
-        <text class="empty-text">暂无视频数据</text>
+        <text class="empty-text">{{videoError || '暂无视频数据'}}</text>
+        <text class="error-hint" tt:if="{{videoError && videoError.includes('网络')}}">
+          网络连接问题，已切换到模拟数据模式
+        </text>
       </view>
       
       <!-- 加载更多 -->
@@ -117,7 +123,10 @@
       <!-- 评论列表为空 -->
       <view class="empty-state" tt:if="{{comments.length === 0 && !commentLoading}}">
         <text class="empty-icon">💬</text>
-        <text class="empty-text">暂无评论数据</text>
+        <text class="empty-text">{{commentError || '暂无评论数据'}}</text>
+        <text class="error-hint" tt:if="{{commentError && commentError.includes('网络')}}">
+          网络连接问题，已切换到模拟数据模式
+        </text>
       </view>
       
       <!-- 加载更多 -->
@@ -150,7 +159,10 @@
       <!-- 私信列表为空 -->
       <view class="empty-state" tt:if="{{messages.length === 0 && !messageLoading}}">
         <text class="empty-icon">✉️</text>
-        <text class="empty-text">暂无私信数据</text>
+        <text class="empty-text">{{messageError || '暂无私信数据'}}</text>
+        <text class="error-hint" tt:if="{{messageError && messageError.includes('网络')}}">
+          网络连接问题，已切换到模拟数据模式
+        </text>
       </view>
       
       <!-- 加载更多 -->

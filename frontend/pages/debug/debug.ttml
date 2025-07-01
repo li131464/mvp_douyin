@@ -1,46 +1,98 @@
-<view class="container">
-  <view class="header">
-    <text class="title">抖音授权调试工具</text>
-    <view class="status">
-      <text class="status-item">登录状态: {{isLogin ? '已登录' : '未登录'}}</text>
-      <text class="status-item">OAuth状态: {{hasOAuth ? '已授权' : '未授权'}}</text>
+<view class="debug-container">
+  <view class="debug-header">
+    <text class="debug-title">调试工具</text>
+    <text class="debug-subtitle">用于测试和诊断小程序功能</text>
+  </view>
+
+  <!-- 基本状态信息 -->
+  <view class="debug-section">
+    <text class="section-title">📊 基本状态</text>
+    <view class="status-item">
+      <text class="status-label">登录状态:</text>
+      <text class="status-value {{isLogin ? 'success' : 'error'}}">{{isLogin ? '已登录' : '未登录'}}</text>
+    </view>
+    <view class="status-item">
+      <text class="status-label">OAuth状态:</text>
+      <text class="status-value {{hasOAuth ? 'success' : 'error'}}">{{hasOAuth ? '已授权' : '未授权'}}</text>
     </view>
   </view>
 
-  <view class="actions">
-    <button class="btn" bindtap="testLogin">测试登录</button>
-    <button class="btn" bindtap="testAuth">测试OAuth授权</button>
-    <button class="btn" bindtap="testDirectAuth">直接调用授权API</button>
-    <button class="btn" bindtap="testDifferentScopes">测试不同权限</button>
-    <button class="btn" bindtap="testMockAuth">测试模拟授权</button>
-    <button class="btn" bindtap="testRealData">测试真实数据</button>
-    <button class="btn secondary" bindtap="logout">注销</button>
-    <button class="btn secondary" bindtap="clearLogs">清除日志</button>
-  </view>
-
-  <!-- 测试按钮区域 -->
-  <view class="test-buttons">
-    <button bindtap="testLogin" class="test-btn">测试登录</button>
-    <button bindtap="testAuth" class="test-btn">测试授权</button>
-    <button bindtap="testDirectAuth" class="test-btn">直接调用授权API</button>
-    <button bindtap="testSingleScope" class="test-btn">测试单一权限</button>
-    <button bindtap="testDetailedAuth" class="test-btn">详细权限测试</button>
-    <button bindtap="testMockAuth" class="test-btn">测试模拟授权</button>
-    <button bindtap="testRealData" class="test-btn">测试真实数据</button>
-    <button bindtap="testDifferentScopes" class="test-btn">测试不同权限</button>
-  </view>
-
-  <view class="logs">
-    <view class="logs-header">
-      <text class="logs-title">调试日志 ({{logs.length}}条)</text>
+  <!-- 服务器连接状态 -->
+  <view class="debug-section">
+    <text class="section-title">🌐 服务器状态</text>
+    <view class="info-box">
+      <text class="info-text">{{serverStatus || '检查中...'}}</text>
     </view>
-    <scroll-view class="logs-content" scroll-y="true">
-      <view class="log-item" tt:for="{{logs}}" tt:key="index">
-        <text class="log-text">{{item}}</text>
-      </view>
-      <view tt:if="{{logs.length === 0}}" class="empty-logs">
-        <text>暂无日志</text>
-      </view>
-    </scroll-view>
+  </view>
+
+  <!-- 网络信息 -->
+  <view class="debug-section">
+    <text class="section-title">📱 设备信息</text>
+    <view class="info-box">
+      <text class="info-text">{{networkStatus || '获取中...'}}</text>
+    </view>
+  </view>
+
+  <!-- OAuth授权详情 -->
+  <view class="debug-section">
+    <text class="section-title">🔐 OAuth授权详情</text>
+    <view class="info-box">
+      <text class="info-text">{{authStatus || '获取中...'}}</text>
+    </view>
+  </view>
+
+  <!-- 测试结果 -->
+  <view class="debug-section" tt:if="{{debugInfo}}">
+    <text class="section-title">🧪 测试结果</text>
+    <view class="info-box">
+      <text class="info-text">{{debugInfo}}</text>
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="debug-section">
+    <text class="section-title">🛠️ 调试操作</text>
+    
+    <view class="button-group">
+      <button class="debug-button primary" bindtap="refreshDebugInfo">刷新状态</button>
+      <button class="debug-button secondary" bindtap="testOAuthStatus">测试OAuth</button>
+    </view>
+    
+    <view class="button-group">
+      <button class="debug-button secondary" bindtap="testSimulateAuth">测试模拟授权</button>
+      <button class="debug-button secondary" bindtap="copyDebugInfo">复制信息</button>
+    </view>
+    
+    <view class="button-group">
+      <button class="debug-button danger" bindtap="clearAllData">清除所有数据</button>
+    </view>
+  </view>
+
+  <!-- 基础功能测试 -->
+  <view class="debug-section">
+    <text class="section-title">🔧 基础功能</text>
+    
+    <view class="button-group">
+      <button class="debug-button secondary" bindtap="testLogin">测试登录</button>
+      <button class="debug-button secondary" bindtap="testAuth">测试授权</button>
+    </view>
+    
+    <view class="button-group">
+      <button class="debug-button secondary" bindtap="testAPI">测试API</button>
+      <button class="debug-button danger" bindtap="logout">注销</button>
+    </view>
+  </view>
+
+  <!-- 日志显示 -->
+  <view class="debug-section">
+    <text class="section-title">📝 操作日志</text>
+    <view class="logs-container">
+      <text class="log-item" tt:for="{{logs}}" tt:key="*this">{{item}}</text>
+    </view>
+  </view>
+
+  <!-- 返回按钮 -->
+  <view class="debug-section">
+    <button class="debug-button primary full-width" bindtap="goBack">返回首页</button>
   </view>
 </view> 

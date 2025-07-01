@@ -10,18 +10,21 @@ Page({
     videoCursor: 0,
     videoHasMore: true,
     videoLoading: false,
+    videoError: null,
     
     // 评论数据
     comments: [],
     commentCursor: 0,
     commentHasMore: true,
     commentLoading: false,
+    commentError: null,
     
     // 私信数据
     messages: [],
     messageCursor: 0,
     messageHasMore: true,
     messageLoading: false,
+    messageError: null,
     
     // 用户信息
     userInfo: null
@@ -45,8 +48,10 @@ Page({
     }
     
     // 获取用户信息
+    const isRealData = douyinAuth._accessToken && !douyinAuth._accessToken.includes('mock');
     this.setData({
-      userInfo: douyinAuth.userInfo
+      userInfo: douyinAuth.userInfo,
+      dataSource: isRealData ? '🔴 真实数据模式' : '🟡 模拟数据模式'
     });
     
     // 根据当前标签页加载数据
@@ -97,7 +102,8 @@ Page({
 
     this.setData({
       videoLoading: true,
-      loading: !loadMore && this.data.videos.length === 0
+      loading: !loadMore && this.data.videos.length === 0,
+      videoError: null
     });
 
     try {
@@ -112,17 +118,27 @@ Page({
         this.setData({
           videos: newVideos,
           videoCursor: result.cursor,
-          videoHasMore: result.hasMore
+          videoHasMore: result.hasMore,
+          videoError: null
         });
         
         console.log(`加载了 ${result.data.length} 个视频，总计 ${newVideos.length} 个`);
       }
     } catch (error) {
       console.error('加载视频失败:', error);
-      tt.showToast({
-        title: error.message || '加载视频失败',
-        icon: 'none'
+      
+      const errorMsg = error.message || '加载视频失败';
+      this.setData({
+        videoError: errorMsg
       });
+      
+      // 只在非网络错误时显示toast
+      if (!errorMsg.includes('网络')) {
+        tt.showToast({
+          title: errorMsg,
+          icon: 'none'
+        });
+      }
     } finally {
       this.setData({
         videoLoading: false,
@@ -139,7 +155,8 @@ Page({
 
     this.setData({
       commentLoading: true,
-      loading: !loadMore && this.data.comments.length === 0
+      loading: !loadMore && this.data.comments.length === 0,
+      commentError: null
     });
 
     try {
@@ -154,17 +171,27 @@ Page({
         this.setData({
           comments: newComments,
           commentCursor: result.cursor,
-          commentHasMore: result.hasMore
+          commentHasMore: result.hasMore,
+          commentError: null
         });
         
         console.log(`加载了 ${result.data.length} 条评论，总计 ${newComments.length} 条`);
       }
     } catch (error) {
       console.error('加载评论失败:', error);
-      tt.showToast({
-        title: error.message || '加载评论失败',
-        icon: 'none'
+      
+      const errorMsg = error.message || '加载评论失败';
+      this.setData({
+        commentError: errorMsg
       });
+      
+      // 只在非网络错误时显示toast
+      if (!errorMsg.includes('网络')) {
+        tt.showToast({
+          title: errorMsg,
+          icon: 'none'
+        });
+      }
     } finally {
       this.setData({
         commentLoading: false,
@@ -181,7 +208,8 @@ Page({
 
     this.setData({
       messageLoading: true,
-      loading: !loadMore && this.data.messages.length === 0
+      loading: !loadMore && this.data.messages.length === 0,
+      messageError: null
     });
 
     try {
@@ -196,17 +224,27 @@ Page({
         this.setData({
           messages: newMessages,
           messageCursor: result.cursor,
-          messageHasMore: result.hasMore
+          messageHasMore: result.hasMore,
+          messageError: null
         });
         
         console.log(`加载了 ${result.data.length} 条私信，总计 ${newMessages.length} 条`);
       }
     } catch (error) {
       console.error('加载私信失败:', error);
-      tt.showToast({
-        title: error.message || '加载私信失败',
-        icon: 'none'
+      
+      const errorMsg = error.message || '加载私信失败';
+      this.setData({
+        messageError: errorMsg
       });
+      
+      // 只在非网络错误时显示toast
+      if (!errorMsg.includes('网络')) {
+        tt.showToast({
+          title: errorMsg,
+          icon: 'none'
+        });
+      }
     } finally {
       this.setData({
         messageLoading: false,

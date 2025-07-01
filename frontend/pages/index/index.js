@@ -43,10 +43,16 @@ Page({
     try {
       // 检查是否已登录
       const isLogin = douyinAuth.isLoggedIn;
-      const hasOAuthAuth = douyinAuth.hasOAuthAuth;
-      const authorizedScopes = douyinAuth.authorizedScopes;
+      const hasOAuthAuth = Boolean(douyinAuth.hasOAuthAuth); // 确保返回布尔值
+      const authorizedScopes = douyinAuth.authorizedScopes || []; // 确保返回数组
       
       console.log('Check login status - isLogin:', isLogin, 'hasOAuthAuth:', hasOAuthAuth);
+      console.log('详细OAuth状态检查:', {
+        accessToken: douyinAuth._accessToken ? 'present' : 'missing',
+        authorizedScopes: authorizedScopes,
+        scopesLength: authorizedScopes.length,
+        hasOAuthAuth: hasOAuthAuth
+      });
       
       // 恢复用户主动登录状态
       const hasManualLogin = tt.getStorageSync('hasManualLogin') || false;
@@ -265,25 +271,106 @@ Page({
       tt.hideLoading();
       
       if (result.success) {
-        tt.showToast({
-          title: '授权成功',
-          icon: 'success'
+        console.log('授权成功，结果:', result);
+        
+        // 获取最新的OAuth状态，确保与底层对象同步
+        const hasOAuthAuth = Boolean(douyinAuth.hasOAuthAuth);
+        const authorizedScopes = douyinAuth.authorizedScopes || [];
+        
+        console.log('授权完成后状态更新:', {
+          hasOAuthAuth,
+          authorizedScopes,
+          result,
+          isFallback: result.fallbackMode || false
         });
         
+        // 更新页面状态
         this.setData({
-          hasOAuthAuth: true,
-          authorizedScopes: result.scopes
+          hasOAuthAuth: hasOAuthAuth,
+          authorizedScopes: authorizedScopes
         });
+        
+        // 根据授权结果显示不同的提示信息
+        if (result.fallbackMode) {
+          // 模拟模式授权成功
+          tt.showModal({
+            title: '授权成功',
+            content: `已获得用户数据权限（演示模式）\n\n原因：${result.fallbackReason || '网络连接问题'}\n\n您仍可以查看功能演示和使用模拟数据`,
+            showCancel: false,
+            confirmText: '我知道了'
+          });
+        } else if (!result.isRealData) {
+          // 开发环境模拟授权
+          tt.showModal({
+            title: '授权成功',
+            content: '已获得用户数据权限（开发模式）\n\n您可以查看功能演示和使用模拟数据',
+            showCancel: false,
+            confirmText: '我知道了'
+          });
+        } else {
+          // 真实授权成功
+          tt.showToast({
+            title: '授权成功',
+            icon: 'success'
+          });
+        }
       }
     } catch (error) {
       tt.hideLoading();
       console.error('授权失败:', error);
       
-      tt.showModal({
-        title: '授权失败',
-        content: error.message || '无法获取数据访问权限',
-        showCancel: false
-      });
+      let errorContent = error.message || '无法获取数据访问权限';
+      
+      // 针对不同错误类型的特殊处理
+      if (errorContent.includes('用户取消')) {
+        tt.showModal({
+          title: '授权被取消',
+          content: '您取消了数据权限授权，无法获取您的抖音数据。如需使用完整功能，请重新进行授权。',
+          showCancel: false,
+          confirmText: '我知道了'
+        });
+      } else if (errorContent.includes('网络连接') || errorContent.includes('localhost')) {
+        // 网络连接失败，可能是真机环境
+        console.log('网络连接失败，可能是真机环境无法访问localhost');
+        
+        // 尝试启用模拟模式作为备选方案
+        try {
+          console.log('尝试启用模拟授权模式...');
+          const fallbackResult = await douyinAuth._simulateOAuthAuth(['ma.user.data']);
+          
+          if (fallbackResult.success) {
+            // 更新页面状态
+            this.setData({
+              hasOAuthAuth: Boolean(douyinAuth.hasOAuthAuth),
+              authorizedScopes: douyinAuth.authorizedScopes || []
+            });
+            
+            tt.showModal({
+              title: '权限获取成功',
+              content: '检测到网络连接问题，已自动切换到演示模式。您可以查看功能演示和使用模拟数据。',
+              showCancel: false,
+              confirmText: '我知道了'
+            });
+            return;
+          }
+        } catch (fallbackError) {
+          console.error('模拟授权也失败了:', fallbackError);
+        }
+        
+        tt.showModal({
+          title: '网络连接失败',
+          content: '无法连接到授权服务器，可能的原因：\n\n1. 真机环境无法访问localhost\n2. 网络连接不稳定\n3. 服务器未启动\n\n请检查网络连接或联系技术支持。',
+          showCancel: false,
+          confirmText: '我知道了'
+        });
+      } else {
+        // 其他错误
+        tt.showModal({
+          title: '授权失败',
+          content: errorContent,
+          showCancel: false
+        });
+      }
     }
   },
 

@@ -1,8 +1,11 @@
+# 日志系统 nohup npm start > server.log 2>&1 &
+
 # 抖音小程序后端API部署指南
 
 ## 🚀 快速部署
 
 ### 1. 环境要求
+
 - Node.js >= 16.0.0
 - npm >= 7.0.0
 - （可选）PM2 用于生产环境部署
@@ -53,6 +56,83 @@ RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX_REQUESTS=100
 ```
 
+## 🐛 开发调试配置
+
+### 开发环境和真机测试配置
+
+为了在开发过程中和真机测试时获得更详细的调试信息，请使用以下配置：
+
+```env
+# 开发环境配置
+NODE_ENV=development
+PORT=3090
+
+# 调试日志配置
+LOG_LEVEL=debug
+
+# 抖音开放平台配置（开发阶段可以使用mock数据）
+DOUYIN_APP_ID=your_app_id_here
+DOUYIN_APP_SECRET=your_app_secret_here
+
+# 调试功能开关
+DEBUG_API_CALLS=true
+DEBUG_AUTH_FLOW=true
+```
+
+### 调试功能说明
+
+1. **LOG_LEVEL=debug**: 启用详细的调试日志输出
+   - 包含API请求和响应的详细信息
+   - 显示mock数据生成过程
+   - 记录授权流程的每个步骤
+
+2. **DEBUG_API_CALLS=true**: 启用API调用调试
+   - 记录所有抖音API的请求参数
+   - 显示API响应的详细分析
+   - 包含错误处理的详细信息
+
+3. **DEBUG_AUTH_FLOW=true**: 启用授权流程调试
+   - 显示OAuth授权的详细步骤
+   - 记录token生成和缓存过程
+   - 包含用户信息处理的详细日志
+
+### 真机测试推荐配置
+
+```env
+# 真机测试配置
+NODE_ENV=development
+PORT=3090
+LOG_LEVEL=debug
+
+# 如果还没有正式的抖音开放平台配置，可以先使用mock模式
+# DOUYIN_APP_ID=your_app_id_here
+# DOUYIN_APP_SECRET=your_app_secret_here
+
+# 调试开关
+DEBUG_API_CALLS=true
+DEBUG_AUTH_FLOW=true
+
+# 允许的来源（包含小程序的域名）
+ALLOWED_ORIGINS=http://localhost:3000,https://your-miniapp-domain.com
+```
+
+### 查看调试日志
+
+调试日志会输出到：
+- 控制台：实时查看日志
+- `logs/combined.log`：所有日志记录
+- `logs/error.log`：错误日志记录
+
+在开发环境中，建议使用：
+```bash
+# 启动服务并实时查看日志
+npm start
+
+# 或者在后台运行并查看日志文件
+npm start > server.log 2>&1 &
+tail -f logs/combined.log
+```
+
 ## 🔧 抖音开放平台配置
 
 ### 1. 创建小程序应用
@@ -76,9 +156,10 @@ request合法域名：
 ### 3. 申请API权限
 
 需要申请以下权限：
+
 - `user_info`: 用户基本信息
 - `video.list`: 视频列表
-- `comment.list`: 评论列表  
+- `comment.list`: 评论列表
 - `message.list`: 私信列表
 
 ## 🌐 生产环境部署
@@ -249,6 +330,7 @@ firewall-cmd --reload
 ### 1. 日志管理
 
 日志文件位置：
+
 - `logs/combined.log` - 所有日志
 - `logs/error.log` - 错误日志
 - `logs/exceptions.log` - 异常日志
@@ -287,22 +369,23 @@ pm2 monit
 ### 常见问题
 
 1. **服务启动失败**
+
    ```bash
    # 检查端口占用
    netstat -tulpn | grep :3000
-   
+
    # 检查日志
    pm2 logs douyin-backend
    ```
-
 2. **API调用失败**
+
    ```bash
    # 检查抖音开放平台配置
    # 验证AppID和AppSecret
    # 确认域名白名单设置
    ```
-
 3. **CORS错误**
+
    ```bash
    # 检查ALLOWED_ORIGINS环境变量
    # 确认小程序域名配置正确
@@ -326,19 +409,22 @@ ps aux | grep node
 ## 📞 技术支持
 
 ### 联系方式
+
 - 技术文档：[项目README](./README.md)
 - 问题反馈：项目Issues
 - 邮箱支持：your-email@domain.com
 
 ### 开发者资源
+
 - [抖音开放平台文档](https://developer.open-douyin.com/docs)
 - [Node.js官方文档](https://nodejs.org/docs/)
 - [Express.js文档](https://expressjs.com/)
 
 ---
 
-**注意**: 
+**注意**:
+
 1. 生产环境请务必修改所有默认密钥
 2. 定期更新依赖包以修复安全漏洞
 3. 配置适当的备份策略
-4. 监控服务器资源使用情况 
+4. 监控服务器资源使用情况

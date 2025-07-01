@@ -32,31 +32,66 @@ const consoleFormat = winston.format.combine(
 // 创建logger实例
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
-  format: logFormat,
-  defaultMeta: { service: 'douyin-miniapp-backend' },
+  format: winston.format.combine(
+    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+    winston.format.errors({ stack: true }),
+    winston.format.colorize({ all: true }),
+    winston.format.printf(info => {
+      return `${info.timestamp} [${info.level}]: ${info.message}`;
+    })
+  ),
   transports: [
-    // 错误日志文件
+    // 控制台输出 - 在开发环境显示详细日志
+    new winston.transports.Console({
+      level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
+      format: winston.format.combine(
+        winston.format.colorize({ all: true }),
+        winston.format.printf(info => {
+          const timestamp = new Date().toLocaleTimeString('zh-CN', { 
+            hour12: false,
+            timeZone: 'Asia/Shanghai'
+          });
+          return `${timestamp} [${info.level}]: ${info.message}`;
+        })
+      )
+    }),
+    
+    // 文件输出 - 记录所有日志
     new winston.transports.File({
-      filename: path.join(logDir, 'error.log'),
+      filename: path.join(__dirname, '../logs/error.log'),
       level: 'error',
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.printf(info => {
+          return `${info.timestamp} [${info.level}]: ${info.message}`;
+        })
+      )
     }),
-    // 所有日志文件
+    
     new winston.transports.File({
-      filename: path.join(logDir, 'combined.log'),
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-    }),
+      filename: path.join(__dirname, '../logs/combined.log'),
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.printf(info => {
+          return `${info.timestamp} [${info.level}]: ${info.message}`;
+        })
+      )
+    })
   ],
+  
+  // 处理未捕获的异常
+  exceptionHandlers: [
+    new winston.transports.File({
+      filename: path.join(__dirname, '../logs/exceptions.log'),
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.printf(info => {
+          return `${info.timestamp} [EXCEPTION]: ${info.message}`;
+        })
+      )
+    })
+  ]
 });
-
-// 开发环境下输出到控制台
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(new winston.transports.Console({
-    format: consoleFormat
-  }));
-}
 
 // 处理未捕获的异常
 logger.exceptions.handle(

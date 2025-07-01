@@ -65,10 +65,17 @@ class DouyinAPI {
     try {
       if (!this.appId || !this.appSecret) {
         logger.info('No API credentials configured, using mock mode');
+        logger.debug('Missing credentials - appId:', !!this.appId, 'appSecret:', !!this.appSecret);
         return this._mockCode2Session(code);
       }
       
       logger.info('Attempting real Douyin API call for code2session');
+      logger.debug('Request parameters:', {
+        appid: this.appId,
+        code: code,
+        grant_type: 'authorization_code',
+        endpoint: '/oauth/code2session/'
+      });
       
       const response = await this.client.post('/oauth/code2session/', {
         appid: this.appId,
@@ -77,7 +84,18 @@ class DouyinAPI {
         grant_type: 'authorization_code'
       });
       
+      logger.debug('Raw API response:', {
+        status: response.status,
+        headers: response.headers,
+        data: response.data
+      });
+      
       if (response.data.error) {
+        logger.error('Douyin API returned error:', {
+          error: response.data.error,
+          error_description: response.data.error_description,
+          error_code: response.data.error_code
+        });
         throw new Error(`Douyin API Error: ${response.data.error_description}`);
       }
       
@@ -87,8 +105,20 @@ class DouyinAPI {
       // 检查响应数据是否完整
       if (!response.data.openid) {
         logger.warn('Real API returned incomplete data, falling back to mock');
+        logger.debug('Incomplete response fields:', {
+          hasOpenid: !!response.data.openid,
+          hasUnionid: !!response.data.unionid,
+          hasSessionKey: !!response.data.session_key,
+          allFields: Object.keys(response.data)
+        });
         return this._mockCode2Session(code);
       }
+      
+      logger.info('Code2session successful with real API', {
+        openid: response.data.openid ? 'present' : 'missing',
+        unionid: response.data.unionid ? 'present' : 'missing',
+        session_key: response.data.session_key ? 'present' : 'missing'
+      });
       
       return {
         success: true,
@@ -101,7 +131,11 @@ class DouyinAPI {
         message: error.message,
         status: error.response?.status,
         statusText: error.response?.statusText,
-        data: error.response?.data
+        data: error.response?.data,
+        code: error.code,
+        errno: error.errno,
+        syscall: error.syscall,
+        hostname: error.hostname
       });
       // 回退到模拟模式
       return this._mockCode2Session(code);
@@ -115,10 +149,18 @@ class DouyinAPI {
     try {
       if (!this.appId || !this.appSecret) {
         logger.info('No API credentials configured, using mock mode');
+        logger.debug('Missing credentials for getAccessToken - appId:', !!this.appId, 'appSecret:', !!this.appSecret);
         return this._mockGetAccessToken(ticket, openId);
       }
       
       logger.info('Attempting real Douyin API call for access token');
+      logger.debug('Request parameters for getAccessToken:', {
+        client_key: this.appId,
+        code: ticket,
+        grant_type: 'authorization_code',
+        openId: openId,
+        endpoint: '/oauth/access_token/'
+      });
       
       const response = await this.client.post('/oauth/access_token/', {
         client_key: this.appId,
@@ -127,7 +169,18 @@ class DouyinAPI {
         grant_type: 'authorization_code'
       });
       
+      logger.debug('Raw access token response:', {
+        status: response.status,
+        headers: response.headers,
+        data: response.data
+      });
+      
       if (response.data.error) {
+        logger.error('Douyin API access token error:', {
+          error: response.data.error,
+          error_description: response.data.error_description,
+          error_code: response.data.error_code
+        });
         throw new Error(`Douyin API Error: ${response.data.error_description}`);
       }
       
@@ -139,14 +192,34 @@ class DouyinAPI {
         scope: response.data.scope
       };
       
+      logger.info('Access token response analysis:', {
+        hasAccessToken: !!result.access_token,
+        hasRefreshToken: !!result.refresh_token,
+        expiresIn: result.expires_in,
+        scope: result.scope,
+        allFields: Object.keys(response.data)
+      });
+      
       // 缓存access_token
       const cacheKey = `access_token:${openId}`;
       await cache.set(cacheKey, result.access_token, result.expires_in - 300); // 提前5分钟过期
+      logger.debug('Access token cached with key:', cacheKey, 'expires in:', result.expires_in - 300, 'seconds');
       
       logger.info('Real Douyin API access token call successful');
       return result;
     } catch (error) {
-      logger.warn('Real Douyin API access token call failed, falling back to mock mode:', error.message);
+      logger.warn('Real Douyin API access token call failed, falling back to mock mode:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        code: error.code,
+        errno: error.errno,
+        syscall: error.syscall,
+        hostname: error.hostname,
+        ticket: ticket,
+        openId: openId
+      });
       // 回退到模拟模式
       return this._mockGetAccessToken(ticket, openId);
     }
@@ -305,37 +378,89 @@ class DouyinAPI {
   // 模拟方法
   _mockCode2Session(code) {
     logger.info('Using mock code2session');
-    return {
+    logger.debug('Mock code2session parameters:', { 
+      code: code, 
+      codeLength: code ? code.length : 0,
+      timestamp: Date.now()
+    });
+    
+    const result = {
       success: true,
       openid: `mock_openid_${Math.random().toString(36).substr(2, 9)}`,
       unionid: `mock_unionid_${Math.random().toString(36).substr(2, 9)}`,
       session_key: `mock_session_key_${Math.random().toString(36).substr(2, 16)}`
     };
+    
+    logger.debug('Mock code2session result:', {
+      openid: result.openid,
+      hasUnionid: !!result.unionid,
+      hasSessionKey: !!result.session_key
+    });
+    
+    return result;
   }
 
   _mockGetAccessToken(ticket, openId) {
     logger.info('Using mock get access token');
-    return {
+    logger.debug('Mock getAccessToken parameters:', { 
+      ticket: ticket, 
+      openId: openId,
+      ticketLength: ticket ? ticket.length : 0,
+      timestamp: Date.now()
+    });
+    
+    const result = {
       success: true,
       access_token: `mock_access_token_${Math.random().toString(36).substr(2, 32)}`,
       refresh_token: `mock_refresh_token_${Math.random().toString(36).substr(2, 32)}`,
       expires_in: 7200,
       scope: 'user_info,video.list,comment.list,message.list'
     };
+    
+    logger.debug('Mock getAccessToken result:', {
+      hasAccessToken: !!result.access_token,
+      hasRefreshToken: !!result.refresh_token,
+      expiresIn: result.expires_in,
+      scope: result.scope,
+      accessTokenLength: result.access_token ? result.access_token.length : 0
+    });
+    
+    return result;
   }
 
   _mockRefreshAccessToken(refreshToken, openId) {
     logger.info('Using mock refresh access token');
-    return {
+    logger.debug('Mock refreshAccessToken parameters:', { 
+      refreshToken: refreshToken, 
+      openId: openId,
+      refreshTokenLength: refreshToken ? refreshToken.length : 0,
+      timestamp: Date.now()
+    });
+    
+    const result = {
       success: true,
       access_token: `refreshed_access_token_${Math.random().toString(36).substr(2, 32)}`,
       refresh_token: `refreshed_refresh_token_${Math.random().toString(36).substr(2, 32)}`,
       expires_in: 7200
     };
+    
+    logger.debug('Mock refreshAccessToken result:', {
+      hasAccessToken: !!result.access_token,
+      hasRefreshToken: !!result.refresh_token,
+      expiresIn: result.expires_in
+    });
+    
+    return result;
   }
 
   _mockGetUserVideos(cursor, count) {
     logger.info('Using mock get user videos');
+    logger.debug('Mock getUserVideos parameters:', { 
+      cursor: cursor, 
+      count: count,
+      timestamp: Date.now()
+    });
+    
     const videos = [];
     const startIndex = cursor;
     
@@ -357,16 +482,31 @@ class DouyinAPI {
       });
     }
     
-    return {
+    const result = {
       success: true,
       data: videos,
       cursor: cursor + count,
       has_more: cursor + count < 100
     };
+    
+    logger.debug('Mock getUserVideos result:', {
+      videoCount: videos.length,
+      nextCursor: result.cursor,
+      hasMore: result.has_more,
+      totalPossible: 100
+    });
+    
+    return result;
   }
 
   _mockGetUserComments(cursor, count) {
     logger.info('Using mock get user comments');
+    logger.debug('Mock getUserComments parameters:', { 
+      cursor: cursor, 
+      count: count,
+      timestamp: Date.now()
+    });
+    
     const comments = [];
     const startIndex = cursor;
     
@@ -384,16 +524,31 @@ class DouyinAPI {
       });
     }
     
-    return {
+    const result = {
       success: true,
       data: comments,
       cursor: cursor + count,
       has_more: cursor + count < 200
     };
+    
+    logger.debug('Mock getUserComments result:', {
+      commentCount: comments.length,
+      nextCursor: result.cursor,
+      hasMore: result.has_more,
+      totalPossible: 200
+    });
+    
+    return result;
   }
 
   _mockGetUserMessages(cursor, count) {
     logger.info('Using mock get user messages');
+    logger.debug('Mock getUserMessages parameters:', { 
+      cursor: cursor, 
+      count: count,
+      timestamp: Date.now()
+    });
+    
     const messages = [];
     const startIndex = cursor;
     
@@ -418,12 +573,21 @@ class DouyinAPI {
       });
     }
     
-    return {
+    const result = {
       success: true,
       data: messages,
       cursor: cursor + count,
       has_more: cursor + count < 50
     };
+    
+    logger.debug('Mock getUserMessages result:', {
+      messageCount: messages.length,
+      nextCursor: result.cursor,
+      hasMore: result.has_more,
+      totalPossible: 50
+    });
+    
+    return result;
   }
 }
 

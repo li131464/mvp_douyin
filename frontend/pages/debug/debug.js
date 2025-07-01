@@ -1,15 +1,21 @@
 const douyinAuth = require('../../utils/login');
+const apiConfig = require('../../config/api');
 
 Page({
   data: {
     logs: [],
     isLogin: false,
-    hasOAuth: false
+    hasOAuth: false,
+    debugInfo: '',
+    serverStatus: '',
+    authStatus: '',
+    networkStatus: ''
   },
 
   onLoad() {
     this.addLog('调试页面已加载');
     this.checkStatus();
+    this.refreshDebugInfo();
   },
 
   // 添加日志
@@ -24,9 +30,18 @@ Page({
   checkStatus() {
     const isLogin = douyinAuth.isLoggedIn;
     const hasOAuth = douyinAuth.hasOAuthAuth;
+    const accessToken = douyinAuth._accessToken;
+    const authorizedScopes = douyinAuth.authorizedScopes;
     
     this.setData({ isLogin, hasOAuth });
     this.addLog(`状态检查 - 登录:${isLogin}, OAuth:${hasOAuth}`);
+    this.addLog(`详细信息 - AccessToken:${accessToken ? '已获取' : '未获取'}, 权限:${JSON.stringify(authorizedScopes)}`);
+    
+    // 额外的调试信息
+    this.addLog(`调试信息 - Token长度:${accessToken ? accessToken.length : 0}, 权限数量:${authorizedScopes.length}`);
+    if (accessToken) {
+      this.addLog(`Token前10位: ${accessToken.substring(0, 10)}...`);
+    }
   },
 
   // 测试登录
@@ -69,7 +84,12 @@ Page({
       
       const result = await douyinAuth.authorizeWithScopes(['ma.user.data']);
       this.addLog(`授权结果: ${JSON.stringify(result)}`);
-      this.checkStatus();
+      
+      // 延迟一秒后检查状态，确保状态已保存
+      setTimeout(() => {
+        this.checkStatus();
+        this.addLog('=== 授权完成，状态已更新 ===');
+      }, 1000);
     } catch (error) {
       this.addLog(`授权失败: ${error.message}`);
       this.addLog(`错误详情: ${JSON.stringify(error)}`);
@@ -129,28 +149,57 @@ Page({
   // 测试真实数据获取
   async testRealData() {
     try {
-      this.addLog('开始测试真实数据获取...');
+      this.addLog('=== 开始测试真实数据获取流程 ===');
       
+      // 第一步：检查登录状态
       if (!douyinAuth.isLoggedIn) {
-        this.addLog('用户未登录，先进行登录...');
+        this.addLog('Step 1: 用户未登录，先进行登录...');
         await douyinAuth.login();
+        this.addLog('✅ 登录完成');
+      } else {
+        this.addLog('✅ Step 1: 用户已登录');
       }
 
+      // 第二步：检查OAuth授权状态
       if (!douyinAuth.hasOAuthAuth) {
-        this.addLog('用户未授权，先进行授权...');
+        this.addLog('Step 2: 用户未授权，开始OAuth授权...');
         const authResult = await douyinAuth.authorizeWithScopes([
           'ma.user.data' // 抖音主页数据权限
         ]);
-        this.addLog(`授权结果: ${JSON.stringify(authResult)}`);
+        this.addLog(`✅ 授权完成: ${JSON.stringify(authResult)}`);
+        
+        // 再次检查授权状态
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (douyinAuth.hasOAuthAuth) {
+          this.addLog('✅ OAuth状态确认成功');
+        } else {
+          this.addLog('⚠️ OAuth状态检查异常，但继续尝试获取数据...');
+        }
+      } else {
+        this.addLog('✅ Step 2: 用户已授权');
       }
 
-      this.addLog('开始获取用户视频数据...');
-      const videoResult = await douyinAuth.getUserVideos(0, 3);
-      this.addLog(`视频数据获取结果: ${JSON.stringify(videoResult)}`);
+      // 第三步：获取用户数据
+      this.addLog('Step 3: 开始获取用户视频数据...');
+      try {
+        const videoResult = await douyinAuth.getUserVideos(0, 3);
+        this.addLog(`✅ 视频数据获取成功!`);
+        this.addLog(`数据概览: 获取${videoResult.data.length}个视频，hasMore:${videoResult.hasMore}`);
+        this.addLog(`首个视频: ${videoResult.data[0] ? videoResult.data[0].title : '无数据'}`);
+        
+        if (videoResult.data.length > 0) {
+          this.addLog('🎉 恭喜！成功获取到抖音真实数据！');
+        }
+      } catch (videoError) {
+        this.addLog(`❌ 视频数据获取失败: ${videoError.message}`);
+      }
       
+      // 第四步：更新状态显示
       this.checkStatus();
+      this.addLog('=== 真实数据测试完成 ===');
+      
     } catch (error) {
-      this.addLog(`测试失败: ${error.message}`);
+      this.addLog(`❌ 测试失败: ${error.message}`);
       this.addLog(`错误详情: ${JSON.stringify(error)}`);
     }
   },
@@ -319,6 +368,149 @@ Page({
     }
   },
 
+  // 测试服务器连接
+  async testConnection() {
+    try {
+      this.addLog('=== 开始网络连接测试 ===');
+      
+      // 显示当前环境信息
+      const isDevTools = apiConfig.isDevToolsEnv();
+      this.addLog(`当前环境: ${isDevTools ? '开发者工具' : '真机'}`);
+      
+      const currentBaseUrl = apiConfig.getApiBaseUrl();
+      this.addLog(`目标服务器: ${currentBaseUrl}`);
+      
+      // 测试连接
+      this.addLog('发起连接测试...');
+      const result = await apiConfig.testServerConnection();
+      
+      if (result.success) {
+        this.addLog(`✅ 连接成功！`);
+        this.addLog(`服务器响应: ${JSON.stringify(result.data)}`);
+        this.addLog(`状态码: ${result.statusCode || '200'}`);
+      } else {
+        this.addLog(`❌ 连接失败: ${result.error}`);
+        this.addLog(`服务器地址: ${result.baseUrl}`);
+        
+        // 给出建议
+        if (!isDevTools) {
+          this.addLog('建议检查：');
+          this.addLog('1. 小程序后台是否配置了服务器域名');
+          this.addLog('2. 服务器是否正常运行');
+          this.addLog('3. 网络是否正常');
+        }
+      }
+      
+      this.addLog('=== 连接测试完成 ===');
+    } catch (error) {
+      this.addLog(`连接测试异常: ${error.message}`);
+    }
+  },
+
+  // 获取服务器调试信息
+  async getServerInfo() {
+    try {
+      this.addLog('获取服务器调试信息...');
+      const result = await douyinAuth.getDebugInfo();
+      if (result.success) {
+        this.addLog(`服务器信息: ${JSON.stringify(result.data)}`);
+      } else {
+        this.addLog(`获取失败: ${result.error}`);
+      }
+    } catch (error) {
+      this.addLog(`获取服务器信息异常: ${error.message}`);
+    }
+  },
+
+  // 测试多个服务器
+  async testMultipleServers() {
+    this.addLog('=== 测试所有可用服务器 ===');
+    
+    const servers = [
+      { name: '主服务器', url: 'http://kuzchat.cn:3090' },
+      { name: '本地服务器', url: 'http://localhost:3000' },
+      { name: '备用服务器', url: 'http://47.108.240.146:3090' }
+    ];
+    
+    for (const server of servers) {
+      try {
+        this.addLog(`测试 ${server.name}: ${server.url}`);
+        const result = await apiConfig.testServerConnection(server.url);
+        
+        if (result.success) {
+          this.addLog(`✅ ${server.name} 连接成功`);
+          this.addLog(`响应时间: ${result.data ? '正常' : '未知'}`);
+        } else {
+          this.addLog(`❌ ${server.name} 连接失败: ${result.error}`);
+        }
+      } catch (error) {
+        this.addLog(`❌ ${server.name} 测试异常: ${error.message}`);
+      }
+      
+      // 添加延迟避免请求过快
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    
+    this.addLog('=== 服务器测试完成 ===');
+  },
+
+  // 测试服务器调试信息
+  async debugOAuthStatus() {
+    try {
+      this.addLog('=== 开始调试OAuth状态 ===');
+      
+      if (!douyinAuth.openId) {
+        this.addLog('错误: 用户未登录，无法调试OAuth状态');
+        return;
+      }
+      
+      this.addLog(`正在调试用户 ${douyinAuth.openId} 的OAuth状态...`);
+      
+      // 调用后端调试接口
+      const debugResult = await douyinAuth._callBackendAPI(`/api/auth/debug/${douyinAuth.openId}`);
+      
+      this.addLog('=== 后端调试信息 ===');
+      this.addLog(`OpenID: ${debugResult.data.openId}`);
+      this.addLog(`有Session: ${debugResult.data.hasSession}`);
+      this.addLog(`有AccessToken: ${debugResult.data.hasAccessToken}`);
+      
+      if (debugResult.data.sessionInfo) {
+        this.addLog(`Session创建时间: ${debugResult.data.sessionInfo.createdAt}`);
+        this.addLog(`有UnionID: ${debugResult.data.sessionInfo.hasUnionid}`);
+      }
+      
+      if (debugResult.data.tokenInfo) {
+        this.addLog(`Token权限范围: ${debugResult.data.tokenInfo.scope}`);
+        this.addLog(`Token创建时间: ${debugResult.data.tokenInfo.createdAt}`);
+        this.addLog(`Token过期时间: ${debugResult.data.tokenInfo.expiresAt}`);
+        this.addLog(`Token是否过期: ${debugResult.data.tokenInfo.isExpired}`);
+      }
+      
+      this.addLog(`服务器环境: ${debugResult.data.environment.nodeEnv}`);
+      this.addLog(`抖音API配置: ${debugResult.data.environment.hasAppId ? '已配置' : '未配置'}`);
+      
+      this.addLog('=== 前端状态对比 ===');
+      this.addLog(`前端登录状态: ${douyinAuth.isLoggedIn}`);
+      this.addLog(`前端OAuth状态: ${douyinAuth.hasOAuthAuth}`);
+      this.addLog(`前端AccessToken: ${douyinAuth._accessToken ? '已获取' : '未获取'}`);
+      this.addLog(`前端权限数量: ${douyinAuth.authorizedScopes.length}`);
+      
+      this.addLog('=== OAuth调试完成 ===');
+      
+    } catch (error) {
+      this.addLog(`OAuth调试失败: ${error.message}`);
+      this.addLog('这通常是因为真机环境无法连接后端服务器');
+      
+      // 显示前端本地状态
+      this.addLog('=== 显示前端本地状态 ===');
+      this.addLog(`登录状态: ${douyinAuth.isLoggedIn}`);
+      this.addLog(`OAuth状态: ${douyinAuth.hasOAuthAuth}`);
+      this.addLog(`OpenID: ${douyinAuth.openId || '未获取'}`);
+      this.addLog(`AccessToken: ${douyinAuth._accessToken ? '已获取' : '未获取'}`);
+      this.addLog(`权限列表: ${JSON.stringify(douyinAuth.authorizedScopes)}`);
+    }
+  },
+
   // 清除日志
   clearLogs() {
     this.setData({ logs: [] });
@@ -329,5 +521,283 @@ Page({
     douyinAuth.logout();
     this.checkStatus();
     this.addLog('已注销');
+  },
+
+  /**
+   * 刷新调试信息
+   */
+  async refreshDebugInfo() {
+    try {
+      // 基础状态检查
+      const basicInfo = {
+        isLoggedIn: douyinAuth.isLoggedIn,
+        hasOAuthAuth: douyinAuth.hasOAuthAuth,
+        openId: douyinAuth.openId ? '已获取' : '未获取',
+        unionId: douyinAuth.unionId ? '已获取' : '未获取',
+        userInfo: douyinAuth.userInfo ? '已获取' : '未获取',
+        authorizedScopes: douyinAuth.authorizedScopes || [],
+        hasAccessToken: !!douyinAuth._accessToken,
+        accessTokenLength: douyinAuth._accessToken ? douyinAuth._accessToken.length : 0
+      };
+
+      console.log('基础状态信息:', basicInfo);
+
+      this.setData({
+        authStatus: JSON.stringify(basicInfo, null, 2)
+      });
+
+      // 检查服务器连接
+      await this.checkServerConnection();
+
+      // 检查网络状态
+      this.checkNetworkStatus();
+
+    } catch (error) {
+      console.error('刷新调试信息失败:', error);
+      this.setData({
+        debugInfo: `刷新失败: ${error.message}`
+      });
+    }
+  },
+
+  /**
+   * 检查服务器连接
+   */
+  async checkServerConnection() {
+    try {
+      const result = await douyinAuth.testConnection();
+      this.setData({
+        serverStatus: result.success ? '✅ 服务器连接正常' : `❌ 服务器连接失败: ${result.error}`
+      });
+    } catch (error) {
+      this.setData({
+        serverStatus: `❌ 服务器连接测试失败: ${error.message}`
+      });
+    }
+  },
+
+  /**
+   * 检查网络状态
+   */
+  checkNetworkStatus() {
+    try {
+      const systemInfo = tt.getSystemInfoSync();
+      const networkInfo = {
+        platform: systemInfo.platform,
+        brand: systemInfo.brand,
+        model: systemInfo.model,
+        version: systemInfo.version,
+        isDevTools: systemInfo.platform === 'devtools'
+      };
+
+      this.setData({
+        networkStatus: JSON.stringify(networkInfo, null, 2)
+      });
+    } catch (error) {
+      this.setData({
+        networkStatus: `获取网络信息失败: ${error.message}`
+      });
+    }
+  },
+
+  /**
+   * 测试OAuth授权状态
+   */
+  async testOAuthStatus() {
+    try {
+      tt.showLoading({ title: '测试中...' });
+
+      const testResult = {
+        timestamp: new Date().toISOString(),
+        loginStatus: douyinAuth.isLoggedIn,
+        oauthStatus: douyinAuth.hasOAuthAuth,
+        accessTokenExists: !!douyinAuth._accessToken,
+        scopesCount: douyinAuth.authorizedScopes.length,
+        scopes: douyinAuth.authorizedScopes
+      };
+
+      // 尝试调用一个需要OAuth授权的API
+      try {
+        await douyinAuth._ensureValidToken();
+        testResult.tokenValidation = '✅ Token验证通过';
+      } catch (tokenError) {
+        testResult.tokenValidation = `❌ Token验证失败: ${tokenError.message}`;
+      }
+
+      tt.hideLoading();
+
+      this.setData({
+        debugInfo: JSON.stringify(testResult, null, 2)
+      });
+
+      console.log('OAuth状态测试结果:', testResult);
+
+    } catch (error) {
+      tt.hideLoading();
+      console.error('OAuth状态测试失败:', error);
+      this.setData({
+        debugInfo: `测试失败: ${error.message}`
+      });
+    }
+  },
+
+  /**
+   * 测试模拟授权
+   */
+  async testSimulateAuth() {
+    try {
+      tt.showLoading({ title: '测试模拟授权...' });
+
+      console.log('开始测试模拟授权...');
+      const result = await douyinAuth._simulateOAuthAuth(['ma.user.data']);
+
+      tt.hideLoading();
+
+      if (result.success) {
+        tt.showModal({
+          title: '模拟授权成功',
+          content: `权限: ${result.scopes.join(', ')}\nToken: ${result.accessToken ? '已获取' : '未获取'}`,
+          showCancel: false
+        });
+
+        // 刷新调试信息
+        this.refreshDebugInfo();
+      } else {
+        tt.showModal({
+          title: '模拟授权失败',
+          content: '请查看控制台日志了解详情',
+          showCancel: false
+        });
+      }
+
+    } catch (error) {
+      tt.hideLoading();
+      console.error('模拟授权测试失败:', error);
+      tt.showModal({
+        title: '测试失败',
+        content: error.message,
+        showCancel: false
+      });
+    }
+  },
+
+  /**
+   * 清除所有数据
+   */
+  clearAllData() {
+    tt.showModal({
+      title: '确认清除',
+      content: '这将清除所有登录状态和授权信息，是否继续？',
+      success: (res) => {
+        if (res.confirm) {
+          try {
+            douyinAuth.logout();
+            this.refreshDebugInfo();
+            tt.showToast({
+              title: '已清除',
+              icon: 'success'
+            });
+          } catch (error) {
+            tt.showToast({
+              title: '清除失败',
+              icon: 'fail'
+            });
+          }
+        }
+      }
+    });
+  },
+
+  /**
+   * 复制调试信息
+   */
+  copyDebugInfo() {
+    const allInfo = {
+      authStatus: this.data.authStatus,
+      serverStatus: this.data.serverStatus,
+      networkStatus: this.data.networkStatus,
+      debugInfo: this.data.debugInfo
+    };
+
+    const infoText = JSON.stringify(allInfo, null, 2);
+
+    if (tt.setClipboardData) {
+      tt.setClipboardData({
+        data: infoText,
+        success: () => {
+          tt.showToast({
+            title: '已复制到剪贴板',
+            icon: 'success'
+          });
+        },
+        fail: () => {
+          tt.showToast({
+            title: '复制失败',
+            icon: 'fail'
+          });
+        }
+      });
+    } else {
+      tt.showModal({
+        title: '调试信息',
+        content: '复制功能不可用，请手动记录信息',
+        showCancel: false
+      });
+    }
+  },
+
+  /**
+   * 返回首页
+   */
+  goBack() {
+    tt.navigateBack({
+      fail: () => {
+        // 如果无法返回，则跳转到首页
+        tt.redirectTo({
+          url: '../index/index'
+        });
+      }
+    });
+  },
+
+  /**
+   * 测试API调用
+   */
+  async testAPI() {
+    try {
+      tt.showLoading({ title: '测试API中...' });
+      
+      if (!douyinAuth.hasOAuthAuth) {
+        tt.hideLoading();
+        tt.showModal({
+          title: '提示',
+          content: '请先完成OAuth授权才能测试API',
+          showCancel: false
+        });
+        return;
+      }
+
+      // 测试获取用户视频
+      const result = await douyinAuth.getUserVideos(0, 1);
+      
+      tt.hideLoading();
+      
+      this.addLog(`API测试成功: 获取到${result.data?.length || 0}条视频数据`);
+      
+      tt.showToast({
+        title: 'API测试成功',
+        icon: 'success'
+      });
+
+    } catch (error) {
+      tt.hideLoading();
+      console.error('API测试失败:', error);
+      this.addLog(`API测试失败: ${error.message}`);
+      
+      tt.showToast({
+        title: 'API测试失败',
+        icon: 'fail'
+      });
+    }
   }
 }); 

@@ -1,6 +1,6 @@
 Page({
   data: {
-    
+    updateTime: new Date().toLocaleDateString('zh-CN')
   },
 
   onLoad() {
