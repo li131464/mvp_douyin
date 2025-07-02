@@ -1,36 +1,101 @@
 <view class="privacy-container">
   <view class="privacy-header">
-    <text class="privacy-title">隐私政策</text>
+    <text class="privacy-title">用户隐私保护指引</text>
   </view>
   
   <view class="privacy-content">
     <view class="privacy-section">
-      <text class="section-title">1. 信息收集</text>
-      <text class="section-content">本应用可能收集以下信息：\n• 用户头像和昵称（用于个性化显示）\n• 设备信息（用于应用优化）\n• 使用记录（用于功能改进）</text>
+      <text class="section-title">引言</text>
+      <text class="section-content">《抖音数据获取小程序》（以下简称"本小程序"）深知个人信息对您的重要性，并会尽全力保护您的个人信息安全可靠。我们致力于维持您对我们的信任，恪守以下原则保护您的个人信息：权责一致原则、目的明确原则、选择同意原则、最少够用原则、确保安全原则、主体参与原则、公开透明原则等。</text>
     </view>
     
     <view class="privacy-section">
-      <text class="section-title">2. 信息使用</text>
-      <text class="section-content">收集的信息仅用于：\n• 提供更好的用户体验\n• 个性化内容展示\n• 应用功能优化</text>
+      <text class="section-title">1. 我们收集的信息</text>
+      <text class="section-content">为了向您提供更好的服务，我们可能会收集以下信息：
+
+<text class="subsection-title">1.1 用户头像、昵称</text>
+• 收集方式：通过tt.getUserProfile接口获取
+• 使用目的：用于个性化展示和用户身份识别
+• 使用场景：登录后显示用户信息，提供个性化服务
+
+<text class="subsection-title">1.2 抖音账号数据</text>
+• 抖音主页数据（ma.user.data）：用于分析用户在抖音的基本活动情况
+• 视频数据（ma.item.data）：获取近30天视频基础数据，用于数据分析展示
+• 评论数据（ma.item.comment）：获取用户评论信息，用于内容分析
+• 收集方式：通过抖音开放平台API接口获取
+• 使用目的：为您提供数据分析和内容展示服务
+
+<text class="subsection-title">1.3 设备信息</text>
+• 设备型号、操作系统版本等技术信息
+• 使用目的：确保应用兼容性和稳定性</text>
     </view>
     
     <view class="privacy-section">
-      <text class="section-title">3. 信息保护</text>
-      <text class="section-content">我们承诺：\n• 不会泄露用户个人信息\n• 采用安全措施保护数据\n• 仅在必要时收集最少信息</text>
+      <text class="section-title">2. 信息使用方式</text>
+      <text class="section-content">我们收集的信息仅用于：
+• 提供更好的用户体验和个性化服务
+• 进行数据分析和统计，优化产品功能
+• 保障应用安全和稳定运行
+• 遵守相关法律法规要求
+
+我们承诺不会将您的个人信息用于其他商业目的。</text>
     </view>
     
     <view class="privacy-section">
-      <text class="section-title">4. 权限说明</text>
-      <text class="section-content">应用需要以下权限：\n• 用户信息权限：用于获取头像和昵称\n• 存储权限：用于保存待办事项\n• 网络权限：用于数据同步</text>
+      <text class="section-title">3. 信息保护措施</text>
+      <text class="section-content">我们采取多种安全保护措施：
+• 数据传输过程中使用HTTPS加密
+• 对敏感信息进行脱敏处理
+• 严格限制数据访问权限
+• 定期进行安全审计和漏洞检测
+• 建立完善的数据安全管理制度</text>
     </view>
     
     <view class="privacy-section">
-      <text class="section-title">5. 联系我们</text>
-      <text class="section-content">如有隐私相关问题，请联系开发者。</text>
+      <text class="section-title">4. 您的权利</text>
+      <text class="section-content">根据相关法律法规，您享有以下权利：
+• 知情权：了解我们收集、使用您个人信息的情况
+• 决定权：选择是否提供个人信息，撤回授权同意
+• 查询权：查询我们收集的您的个人信息
+• 更正权：更正或补充您的个人信息
+• 删除权：在特定条件下删除您的个人信息
+
+如需行使上述权利，请通过本小程序内的反馈功能联系我们。</text>
+    </view>
+    
+    <view class="privacy-section">
+      <text class="section-title">5. 信息共享与披露</text>
+      <text class="section-content">我们不会向第三方出售、转让或披露您的个人信息，除非：
+• 获得您的明确同意
+• 法律法规明确规定
+• 维护国家安全、公共安全或您的生命安全
+• 保护本小程序的合法权益
+
+在共享信息时，我们会要求第三方采取同等级别的保护措施。</text>
+    </view>
+    
+    <view class="privacy-section">
+      <text class="section-title">6. 未成年人保护</text>
+      <text class="section-content">我们非常重视未成年人的个人信息保护。如您为未成年人，建议在监护人指导下使用本小程序。若我们发现在未获得监护人同意的情况下收集了未成年人的个人信息，会设法尽快删除相关数据。</text>
+    </view>
+    
+    <view class="privacy-section">
+      <text class="section-title">7. 政策更新</text>
+      <text class="section-content">我们可能会不时更新本隐私保护指引。更新时，我们会通过小程序内通知等方式向您说明。请您定期查看本政策，了解我们如何保护您的信息。</text>
+    </view>
+    
+    <view class="privacy-section">
+      <text class="section-title">8. 联系我们</text>
+      <text class="section-content">如果您对本隐私保护指引有任何疑问、意见或建议，请通过以下方式联系我们：
+• 小程序内反馈功能
+• 开发者邮箱：privacy@example.com
+
+我们将在收到您的反馈后15个工作日内回复。</text>
     </view>
   </view>
   
   <view class="privacy-footer">
     <text class="update-time">最后更新：{{updateTime}}</text>
+    <text class="effective-time">生效日期：{{effectiveTime}}</text>
   </view>
 </view> 

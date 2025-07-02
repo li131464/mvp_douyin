@@ -164,4 +164,11 @@
   <view class="footer-decoration">
     <view class="decoration-wave"></view>
   </view>
+
+  <!-- 隐私授权弹窗 -->
+  <privacy-popup 
+    auto="{{true}}" 
+    bind:agree="onPrivacyAgree" 
+    bind:disagree="onPrivacyDisagree">
+  </privacy-popup>
 </view>

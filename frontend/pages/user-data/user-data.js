@@ -56,6 +56,24 @@ Page({
     
     // 根据当前标签页加载数据
     this.loadCurrentTabData();
+    
+    // 输出详细的调试信息
+    console.log('📊 用户数据页面详细调试信息:', {
+      userInfo: this.data.userInfo,
+      dataSource: this.data.dataSource,
+      hasOAuthAuth: douyinAuth.hasOAuthAuth,
+      authorizedScopes: douyinAuth.authorizedScopes,
+      scopesCount: douyinAuth.authorizedScopes ? douyinAuth.authorizedScopes.length : 0,
+      scopesType: typeof douyinAuth.authorizedScopes,
+      accessToken: douyinAuth._accessToken ? douyinAuth._accessToken.substring(0, 20) + '...' : 'null',
+      accessTokenLength: douyinAuth._accessToken ? douyinAuth._accessToken.length : 0,
+      isMockToken: douyinAuth._accessToken ? douyinAuth._accessToken.includes('mock_access_token') : false,
+      openId: douyinAuth._openId ? douyinAuth._openId.substring(0, 8) + '...' : 'undefined',
+      unionId: douyinAuth._unionId ? douyinAuth._unionId.substring(0, 8) + '...' : 'undefined',
+      sessionKey: douyinAuth._sessionKey ? 'present' : 'missing',
+      activeTab: this.data.activeTab,
+      timestamp: new Date().toISOString()
+    });
   },
 
   // 切换标签页
@@ -108,7 +126,30 @@ Page({
 
     try {
       const cursor = loadMore ? this.data.videoCursor : 0;
+      
+      console.log('📊 请求视频数据详情:', {
+        loadMore: loadMore,
+        cursor: cursor,
+        count: 10,
+        currentVideoCount: this.data.videos.length,
+        hasOAuthAuth: douyinAuth.hasOAuthAuth,
+        accessTokenPrefix: douyinAuth._accessToken ? douyinAuth._accessToken.substring(0, 8) + '...' : 'undefined',
+        isMockToken: douyinAuth._accessToken ? douyinAuth._accessToken.includes('mock_access_token') : false,
+        authorizedScopes: douyinAuth.authorizedScopes,
+        timestamp: new Date().toISOString()
+      });
+      
       const result = await douyinAuth.getUserVideos(cursor, 10);
+      
+      console.log('📊 视频数据响应详情:', {
+        success: result.success,
+        dataCount: result.data ? result.data.length : 0,
+        cursor: result.cursor,
+        hasMore: result.hasMore,
+        mode: result.mode || 'unknown',
+        errorMessage: result.message,
+        timestamp: new Date().toISOString()
+      });
       
       if (result.success) {
         const newVideos = loadMore ? 
@@ -125,19 +166,50 @@ Page({
         console.log(`加载了 ${result.data.length} 个视频，总计 ${newVideos.length} 个`);
       }
     } catch (error) {
-      console.error('加载视频失败:', error);
-      
-      const errorMsg = error.message || '加载视频失败';
-      this.setData({
-        videoError: errorMsg
+      console.error('❌ 加载视频失败详情:', {
+        errorMessage: error.message,
+        errorCode: error.code,
+        isPermissionError: error.isPermissionError,
+        apiError: error.apiError,
+        status: error.status,
+        response: error.response?.data,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
       });
       
-      // 只在非网络错误时显示toast
-      if (!errorMsg.includes('网络')) {
-        tt.showToast({
-          title: errorMsg,
-          icon: 'none'
+      let errorMsg = error.message || '加载视频失败';
+      
+      // 处理权限相关错误，提供更详细的解决建议
+      if (error.isPermissionError || errorMsg.includes('401') || errorMsg.includes('权限')) {
+        errorMsg = '权限验证失败，请重新进行OAuth授权：\n\n1. 返回首页重新进行数据授权\n2. 确保申请了视频查看权限\n3. 检查网络连接状态';
+        
+        // 显示详细的权限错误对话框
+        tt.showModal({
+          title: '权限验证失败',
+          content: errorMsg,
+          showCancel: true,
+          cancelText: '我知道了',
+          confirmText: '重新授权',
+          success: (res) => {
+            if (res.confirm) {
+              // 跳转回首页重新授权
+              tt.navigateBack();
+            }
+          }
         });
+      } else {
+        // 普通错误处理
+        this.setData({
+          videoError: errorMsg
+        });
+        
+        // 只在非网络错误时显示toast
+        if (!errorMsg.includes('网络')) {
+          tt.showToast({
+            title: errorMsg,
+            icon: 'none'
+          });
+        }
       }
     } finally {
       this.setData({

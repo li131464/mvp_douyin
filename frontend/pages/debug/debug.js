@@ -32,16 +32,43 @@ Page({
     const hasOAuth = douyinAuth.hasOAuthAuth;
     const accessToken = douyinAuth._accessToken;
     const authorizedScopes = douyinAuth.authorizedScopes;
+    const openId = douyinAuth._openId;
+    const unionId = douyinAuth._unionId;
+    const sessionKey = douyinAuth._sessionKey;
+    const userInfo = douyinAuth.userInfo;
     
     this.setData({ isLogin, hasOAuth });
-    this.addLog(`状态检查 - 登录:${isLogin}, OAuth:${hasOAuth}`);
-    this.addLog(`详细信息 - AccessToken:${accessToken ? '已获取' : '未获取'}, 权限:${JSON.stringify(authorizedScopes)}`);
     
-    // 额外的调试信息
-    this.addLog(`调试信息 - Token长度:${accessToken ? accessToken.length : 0}, 权限数量:${authorizedScopes.length}`);
+    // 基础状态检查
+    this.addLog(`🔍 基础状态检查 - 登录:${isLogin}, OAuth:${hasOAuth}`);
+    
+    // 详细用户信息
+    this.addLog(`👤 用户信息详情 - OpenId:${openId ? openId.substring(0, 8) + '...' : '未获取'}, UnionId:${unionId ? unionId.substring(0, 8) + '...' : '未获取'}`);
+    this.addLog(`🔑 会话信息 - SessionKey:${sessionKey ? '已获取' : '未获取'}, 长度:${sessionKey ? sessionKey.length : 0}`);
+    this.addLog(`📱 用户资料 - 昵称:${userInfo?.nickName || '未获取'}, 头像:${userInfo?.avatarUrl ? '已获取' : '未获取'}`);
+    
+    // Token详细信息
+    this.addLog(`🎫 AccessToken详情 - 状态:${accessToken ? '已获取' : '未获取'}, 长度:${accessToken ? accessToken.length : 0}`);
     if (accessToken) {
-      this.addLog(`Token前10位: ${accessToken.substring(0, 10)}...`);
+      const isMockToken = accessToken.includes('mock_access_token');
+      this.addLog(`🎫 Token类型 - ${isMockToken ? '模拟Token' : '真实Token'}, 前缀:${accessToken.substring(0, 10)}...`);
     }
+    
+    // 权限详细信息
+    this.addLog(`🔐 权限详情 - 数量:${authorizedScopes ? authorizedScopes.length : 0}, 类型:${typeof authorizedScopes}`);
+    if (authorizedScopes && authorizedScopes.length > 0) {
+      this.addLog(`🔐 已授权权限 - ${JSON.stringify(authorizedScopes)}`);
+      authorizedScopes.forEach((scope, index) => {
+        this.addLog(`  └─ ${index + 1}. ${scope}`);
+      });
+    }
+    
+    // 环境检测
+    const isDevTools = douyinAuth._isDevTools();
+    this.addLog(`🌍 环境检测 - ${isDevTools ? '开发者工具' : '真机环境'}`);
+    
+    // 时间戳
+    this.addLog(`⏰ 检查时间 - ${new Date().toISOString()}`);
   },
 
   // 测试登录
@@ -259,7 +286,7 @@ Page({
   async testDifferentScopes() {
     const scopeTests = [
       { name: '抖音主页数据', scopes: ['ma.user.data'] },
-              { name: '视频数据查询', scopes: ['video.list.bind', 'data.external.item'] },
+              { name: '视频数据查询', scopes: ['ma.item.data', 'ma.user.data'] },
       { name: '近30天视频数据', scopes: ['ma.item.data'] },
       { name: '视频评论数据', scopes: ['ma.item.comment'] }
     ];
@@ -583,19 +610,58 @@ Page({
       const basicInfo = {
         isLoggedIn: douyinAuth.isLoggedIn,
         hasOAuthAuth: douyinAuth.hasOAuthAuth,
-        openId: douyinAuth.openId ? '已获取' : '未获取',
-        unionId: douyinAuth.unionId ? '已获取' : '未获取',
-        userInfo: douyinAuth.userInfo ? '已获取' : '未获取',
+        openId: douyinAuth.openId ? douyinAuth.openId.substring(0, 8) + '...' : '未获取',
+        unionId: douyinAuth.unionId ? douyinAuth.unionId.substring(0, 8) + '...' : '未获取',
+        userInfo: douyinAuth.userInfo ? {
+          nickName: douyinAuth.userInfo.nickName,
+          hasAvatar: !!douyinAuth.userInfo.avatarUrl
+        } : '未获取',
         authorizedScopes: douyinAuth.authorizedScopes || [],
         hasAccessToken: !!douyinAuth._accessToken,
-        accessTokenLength: douyinAuth._accessToken ? douyinAuth._accessToken.length : 0
+        accessTokenLength: douyinAuth._accessToken ? douyinAuth._accessToken.length : 0,
+        accessTokenPrefix: douyinAuth._accessToken ? douyinAuth._accessToken.substring(0, 10) + '...' : '未获取',
+        isMockToken: douyinAuth._accessToken ? douyinAuth._accessToken.includes('mock_access_token') : false,
+        sessionKey: douyinAuth._sessionKey ? '已获取' : '未获取',
+        sessionKeyLength: douyinAuth._sessionKey ? douyinAuth._sessionKey.length : 0
       };
 
-      console.log('基础状态信息:', basicInfo);
+      // 环境信息
+      const environmentInfo = {
+        isDevTools: douyinAuth._isDevTools(),
+        ttObjectExists: typeof tt !== 'undefined',
+        apiMethods: {
+          hasLogin: typeof tt !== 'undefined' && typeof tt.login === 'function',
+          hasShowDouyinOpenAuth: typeof tt !== 'undefined' && typeof tt.showDouyinOpenAuth === 'function',
+          hasGetUserProfile: typeof tt !== 'undefined' && typeof tt.getUserProfile === 'function'
+        },
+        storage: {
+          hasManualLogin: tt.getStorageSync('hasManualLogin'),
+          hasDevToolsError: tt.getStorageSync('hasDevToolsError')
+        },
+        network: {
+          apiBaseUrl: apiConfig.API_BASE_URL
+        }
+      };
+
+      const enhancedInfo = {
+        基础状态: basicInfo,
+        环境信息: environmentInfo,
+        刷新时间: new Date().toISOString()
+      };
+
+      console.log('📊 完整调试信息:', enhancedInfo);
 
       this.setData({
-        authStatus: JSON.stringify(basicInfo, null, 2)
+        authStatus: JSON.stringify(enhancedInfo, null, 2)
       });
+
+      // 输出详细日志
+      this.addLog(`📊 调试信息已刷新`);
+      this.addLog(`🔍 环境: ${environmentInfo.isDevTools ? '开发者工具' : '真机环境'}`);
+      this.addLog(`🌐 API地址: ${environmentInfo.network.apiBaseUrl}`);
+      this.addLog(`📡 TT对象: ${environmentInfo.ttObjectExists ? '可用' : '不可用'}`);
+      this.addLog(`🎫 Token状态: ${basicInfo.hasAccessToken ? '已获取' : '未获取'} (${basicInfo.isMockToken ? '模拟' : '真实'})`);
+      this.addLog(`🔐 权限数量: ${basicInfo.authorizedScopes.length}`);
 
       // 检查服务器连接
       await this.checkServerConnection();
@@ -604,7 +670,8 @@ Page({
       this.checkNetworkStatus();
 
     } catch (error) {
-      console.error('刷新调试信息失败:', error);
+      console.error('❌ 刷新调试信息失败:', error);
+      this.addLog(`❌ 刷新失败: ${error.message}`);
       this.setData({
         debugInfo: `刷新失败: ${error.message}`
       });

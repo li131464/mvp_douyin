@@ -5,6 +5,7 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const logger = require('./utils/logger');
+const systemCheck = require('./utils/systemCheck');
 const authRoutes = require('./routes/auth');
 const douyinRoutes = require('./routes/douyin');
 const { errorHandler } = require('./middleware/errorHandler');
@@ -123,14 +124,12 @@ app.use('*', (req, res) => {
 // 错误处理中间件
 app.use(errorHandler);
 
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, async () => {
   logger.info(`服务器启动成功，监听端口: ${PORT}`);
   logger.info(`服务器地址: http://localhost:${PORT}`);
   logger.info(`环境: ${process.env.NODE_ENV || 'development'}`);
   logger.info(`日志级别: ${process.env.LOG_LEVEL || 'info'}`);
   logger.info(`抖音API配置: ${process.env.DOUYIN_APP_ID ? '已配置' : '未配置(使用模拟模式)'}`);
-  logger.info('========================================');
-  logger.info('服务器已启动完成，等待客户端连接...');
   logger.info('========================================');
   
   // 启动时显示日志监控提示
@@ -141,8 +140,34 @@ const server = app.listen(PORT, () => {
   console.log(`📝 日志级别: ${process.env.LOG_LEVEL || 'info'}`);
   console.log(`🔑 抖音API: ${process.env.DOUYIN_APP_ID ? '已配置' : '未配置(使用模拟模式)'}`);
   console.log('========================================');
+  
+  // 执行系统配置检查
+  try {
+    console.log('🔍 正在执行系统配置检查...');
+    const checkResult = await systemCheck.runFullCheck();
+    
+    if (checkResult.success) {
+      console.log('✅ 系统配置检查完成，所有项目正常');
+    } else {
+      console.log(`⚠️ 系统配置检查完成，发现 ${checkResult.stats.failed} 个问题需要修复`);
+      console.log('💡 详细信息请查看日志文件或控制台输出');
+      
+      // 输出权限申请指南
+      const guide = systemCheck.getPermissionGuide();
+      console.log('\n📋 权限申请指南:');
+      console.log('🔗 小程序权限申请:', guide.小程序权限申请.平台);
+      console.log('🔗 网站应用权限申请:', guide.网站应用权限申请.平台);
+    }
+  } catch (error) {
+    console.log('❌ 系统配置检查失败:', error.message);
+  }
+  
+  console.log('========================================');
   console.log('📋 实时日志监控已启用，服务器请求将在下方显示...');
   console.log('========================================\n');
+  
+  logger.info('服务器已启动完成，等待客户端连接...');
+  logger.info('========================================');
 });
 
 // 优雅关闭处理

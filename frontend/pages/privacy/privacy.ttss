@@ -37,6 +37,14 @@
   margin-bottom: 20rpx;
 }
 
+.subsection-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1677ff;
+  margin: 20rpx 0 12rpx 0;
+}
+
 .section-content {
   display: block;
   font-size: 28rpx;
@@ -48,9 +56,33 @@
 .privacy-footer {
   margin-top: 40rpx;
   text-align: center;
+  padding: 20rpx;
+  background: #fff;
+  border-radius: 20rpx;
 }
 
-.update-time {
+.update-time, .effective-time {
+  display: block;
   font-size: 24rpx;
   color: #999;
+  margin: 8rpx 0;
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .privacy-container {
+    padding: 32rpx 24rpx;
+  }
+  
+  .privacy-title {
+    font-size: 42rpx;
+  }
+  
+  .section-title {
+    font-size: 30rpx;
+  }
+  
+  .section-content {
+    font-size: 26rpx;
+  }
 } 

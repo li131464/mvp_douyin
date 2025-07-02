@@ -151,14 +151,19 @@ class DouyinAuth {
           await this._callGetAccessToken(authCode);
           console.log('后端获取access_token成功');
           
-          // 保存授权的权限列表
-          this._authorizedScopes = authResult.grantPermissions || scopes;
+          // 保存授权的权限列表 - 优先使用申请的权限，确保权限完整
+          this._authorizedScopes = scopes && scopes.length > 0 ? scopes : (authResult.grantPermissions || [
+            'ma.item.data',        // 近30天视频数据查询权限（小程序专用）
+            'ma.user.data',        // 抖音主页数据权限
+            'user_info'           // 用户基本信息权限
+          ]);
           
           // 立即保存状态到存储
           this._saveToStorage();
           
-          console.log('OAuth授权成功，已获得权限:', this._authorizedScopes);
+          console.log('✅ OAuth授权成功，已获得权限:', this._authorizedScopes);
           console.log('Access Token:', this._accessToken ? '已获取' : '未获取');
+          console.log('Access Token长度:', this._accessToken ? this._accessToken.length : 0);
           console.log('最终OAuth状态检查 - hasOAuthAuth:', this.hasOAuthAuth);
           
           return {
@@ -268,6 +273,18 @@ class DouyinAuth {
     await this._ensureValidToken();
     
     try {
+      console.log('📊 请求用户视频API详情:', {
+        endpoint: '/api/douyin/user-videos',
+        openId: this._openId ? this._openId.substring(0, 8) + '...' : 'undefined',
+        cursor: cursor,
+        count: count,
+        hasAccessToken: !!this._accessToken,
+        accessTokenLength: this._accessToken ? this._accessToken.length : 0,
+        isMockToken: this._accessToken ? this._accessToken.includes('mock_access_token') : false,
+        authorizedScopes: this._authorizedScopes,
+        timestamp: new Date().toISOString()
+      });
+      
       // 调用后端API获取用户视频
       const result = await this._callBackendAPI('/api/douyin/user-videos', {
         method: 'POST',
@@ -278,6 +295,15 @@ class DouyinAuth {
         }
       });
       
+      console.log('📊 用户视频API响应详情:', {
+        success: true,
+        dataCount: result.data ? result.data.length : 0,
+        cursor: result.cursor,
+        hasMore: result.has_more,
+        mode: result.mode || 'unknown',
+        timestamp: new Date().toISOString()
+      });
+      
       return {
         success: true,
         data: result.data,
@@ -285,7 +311,27 @@ class DouyinAuth {
         hasMore: result.has_more
       };
     } catch (error) {
-      console.error('获取用户视频失败:', error);
+      console.error('❌ 获取用户视频失败详情:', {
+        errorMessage: error.message,
+        errorCode: error.code,
+        isPermissionError: error.isPermissionError,
+        status: error.status,
+        response: error.response,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
+      
+      // 处理权限相关错误，提供更友好的错误信息
+      if (error.message && error.message.includes('401')) {
+        const permissionError = new Error('权限验证失败：访问令牌无效或权限不足。请重新进行OAuth授权。');
+        permissionError.isPermissionError = true;
+        throw permissionError;
+      } else if (error.message && error.message.includes('403')) {
+        const permissionError = new Error('权限不足：缺少视频访问权限。请确保已申请video.list.bind权限。');
+        permissionError.isPermissionError = true;
+        throw permissionError;
+      }
+      
       throw error;
     }
   }
@@ -352,11 +398,20 @@ class DouyinAuth {
    * 调用后端API进行code2session
    */
   async _callCode2Session(code) {
-    console.log('调用后端code2session，code:', code);
+    console.log('📊 调用后端code2session详情:', {
+      code: code ? code.substring(0, 8) + '...' : 'undefined',
+      codeLength: code ? code.length : 0,
+      endpoint: '/api/auth/code2session',
+      timestamp: new Date().toISOString()
+    });
     
     // 检测环境
     const isDevTools = this._isDevTools();
-    console.log('当前环境:', isDevTools ? '开发者工具' : '真机环境');
+    console.log('🔍 当前环境检测:', {
+      isDevTools: isDevTools,
+      environment: isDevTools ? '开发者工具' : '真机环境',
+      timestamp: new Date().toISOString()
+    });
     
     try {
       const result = await this._callBackendAPI('/api/auth/code2session', {
@@ -369,11 +424,27 @@ class DouyinAuth {
       this._sessionKey = result.session_key;
       this._isLoggedIn = true;
       
-      console.log('后端登录成功，openId:', this._openId);
+      console.log('✅ 后端登录成功详情:', {
+        openId: this._openId ? this._openId.substring(0, 8) + '...' : 'undefined',
+        unionId: this._unionId ? this._unionId.substring(0, 8) + '...' : 'undefined',
+        hasSessionKey: !!this._sessionKey,
+        sessionKeyLength: this._sessionKey ? this._sessionKey.length : 0,
+        isLoggedIn: this._isLoggedIn,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
-      console.warn('后端code2session失败:', error.message);
+      console.warn('❌ 后端code2session失败详情:', {
+        errorMessage: error.message,
+        errorCode: error.code,
+        status: error.status,
+        isDevTools: isDevTools,
+        environment: isDevTools ? '开发者工具' : '真机环境',
+        willFallbackToMock: true,
+        timestamp: new Date().toISOString()
+      });
+      
       if (!isDevTools) {
-        console.log('真机环境下无法访问localhost后端是正常的，自动切换到模拟模式');
+        console.log('💡 真机环境下无法访问localhost后端是正常的，自动切换到模拟模式');
       }
       // 如果后端调用失败，回退到模拟模式
       await this._simulateCode2Session(code);
@@ -460,8 +531,15 @@ class DouyinAuth {
       
       console.log('生成模拟票据:', mockTicket);
       
-      // 先设置预期的权限列表
-      this._authorizedScopes = scopes && scopes.length > 0 ? scopes : ['ma.user.data', 'user_info', 'video.list.bind', 'comment.list', 'message.list', 'data.external.item'];
+      // 先设置预期的权限列表 - 确保包含所有必要的权限
+      this._authorizedScopes = scopes && scopes.length > 0 ? scopes : [
+        'ma.user.data',        // 抖音主页数据权限
+        'user_info',           // 用户信息权限
+        'video.list.bind',     // 视频列表查询权限
+        'data.external.item',  // 视频数据访问权限
+        'comment.list',        // 评论列表权限
+        'message.list'         // 私信列表权限
+      ];
       console.log('预设权限列表:', this._authorizedScopes);
       
       // 尝试调用后端API获取access_token，如果失败则直接设置模拟token
@@ -494,10 +572,19 @@ class DouyinAuth {
         });
       }
       
-      // 确保权限列表没有被意外覆盖
+      // 确保权限列表没有被意外覆盖，优先使用申请的权限
       if (!this._authorizedScopes || this._authorizedScopes.length === 0) {
-        this._authorizedScopes = scopes && scopes.length > 0 ? scopes : ['ma.user.data', 'user_info', 'video.list.bind', 'comment.list', 'message.list', 'data.external.item'];
-        console.log('重新设置权限列表:', this._authorizedScopes);
+        this._authorizedScopes = scopes && scopes.length > 0 ? [...scopes] : [
+          'ma.user.data',        // 抖音主页数据权限
+          'user_info',           // 用户信息权限  
+          'video.list.bind',     // 视频列表查询权限
+          'data.external.item',  // 视频数据访问权限
+          'comment.list',        // 评论列表权限
+          'message.list'         // 私信列表权限
+        ];
+        console.log('🔧 重新设置权限列表:', this._authorizedScopes);
+      } else {
+        console.log('✅ 权限列表已存在:', this._authorizedScopes);
       }
       
       // 立即保存状态
@@ -614,10 +701,17 @@ class DouyinAuth {
     this._refreshToken = 'mock_refresh_token_' + Math.random().toString(36).substr(2, 32);
     this._expiresAt = Date.now() + (7200 * 1000); // 2小时后过期
     
-    // 设置模拟的权限范围
+    // 设置模拟的权限范围，确保与前端申请的权限一致
     if (this._authorizedScopes.length === 0) {
-      this._authorizedScopes = ['ma.user.data', 'user_info', 'video.list.bind', 'comment.list', 'message.list', 'data.external.item'];
-      console.log('设置模拟权限范围:', this._authorizedScopes);
+      this._authorizedScopes = [
+        'ma.user.data',        // 抖音主页数据权限
+        'user_info',           // 用户信息权限  
+        'video.list.bind',     // 视频列表查询权限
+        'data.external.item',  // 视频数据访问权限
+        'comment.list',        // 评论列表权限
+        'message.list'         // 私信列表权限
+      ];
+      console.log('🎭 设置模拟权限范围:', this._authorizedScopes);
     }
     
     console.log('模拟获取access_token成功，token长度:', this._accessToken ? this._accessToken.length : 0);

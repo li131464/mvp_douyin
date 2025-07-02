@@ -70,31 +70,88 @@ router.post('/user-videos', verifyAccessToken, asyncHandler(async (req, res) => 
   logger.info('Get user videos request:', { openId, cursor, count });
   logger.debug('Token scope:', tokenScope);
   
-  // 检查权限scope
-  const requiredScopes = ['video.list.bind', 'data.external.item'];
+  // 检查权限scope - 支持小程序和网站应用权限格式
+  const requiredScopes = ['ma.item.data', 'ma.user.data', 'video.list.bind', 'data.external.item'];
   const hasRequiredScope = requiredScopes.some(scope => {
     if (typeof tokenScope === 'string') {
-      return tokenScope.includes(scope);
+      // 支持逗号分隔的字符串格式
+      return tokenScope.split(',').some(s => s.trim() === scope);
     } else if (Array.isArray(tokenScope)) {
       return tokenScope.includes(scope);
     }
     return false;
   });
   
+  // 定义权限检查函数
+  const hasScope = (tokenScope, targetScope) => {
+    if (typeof tokenScope === 'string') {
+      return tokenScope.split(',').some(s => s.trim() === targetScope);
+    } else if (Array.isArray(tokenScope)) {
+      return tokenScope.includes(targetScope);
+    }
+    return false;
+  };
+
+  // 记录详细的权限检查信息
+  logger.info('🔍 权限检查详情分析:', {
+    accessTokenPrefix: accessToken ? accessToken.substring(0, 8) + '...' : 'undefined',
+    accessTokenLength: accessToken ? accessToken.length : 0,
+    isMockToken: accessToken ? accessToken.includes('mock_access_token') : false,
+    tokenScope: tokenScope,
+    tokenScopeType: typeof tokenScope,
+    tokenScopeArray: typeof tokenScope === 'string' ? tokenScope.split(',') : tokenScope,
+    requiredScopes: requiredScopes,
+    hasRequiredScope: hasRequiredScope,
+    scopeCheckResults: requiredScopes.map(scope => ({
+      scope: scope,
+      hasScope: hasScope(tokenScope, scope)
+    })),
+    openId: openId ? openId.substring(0, 8) + '...' : 'undefined',
+    timestamp: new Date().toISOString()
+  });
+  
   if (!hasRequiredScope) {
     logger.error('权限不足：缺少视频访问权限', { 
       tokenScope: tokenScope, 
-      requiredScopes: requiredScopes 
+      requiredScopes: requiredScopes,
+      scopeFormat: typeof tokenScope
     });
     return res.status(403).json({
       success: false,
-      message: '权限不足，需要视频访问权限',
+      message: '权限不足，需要视频访问权限。请重新进行OAuth授权并申请必要的权限。',
       code: 'INSUFFICIENT_PERMISSIONS',
       required_scopes: requiredScopes,
-      current_scope: tokenScope
+      current_scope: tokenScope,
+      help: '小程序请申请ma.item.data或ma.user.data权限；网站应用请申请video.list.bind、data.external.item权限'
     });
   }
   
+  // 检测是否为mock token，如果是则直接使用mock模式
+  const isMockToken = accessToken && accessToken.includes('mock_access_token');
+  
+  if (isMockToken) {
+    logger.info('检测到Mock Token，直接使用模拟模式，不调用真实API');
+    
+    // 直接调用mock方法，避免使用fake token调用真实API
+    const result = await douyinApi._mockGetUserVideos(cursor, count);
+    
+    logger.info('Mock mode user videos success:', { 
+      openId, 
+      count: result.data?.length || 0,
+      cursor: result.cursor,
+      hasMore: result.has_more,
+      mode: 'mock'
+    });
+    
+    return res.json({
+      success: true,
+      data: result.data,
+      cursor: result.cursor,
+      has_more: result.has_more,
+      mode: 'mock'
+    });
+  }
+
   try {
     const result = await douyinApi.getUserVideos(accessToken, openId, cursor, count);
     
@@ -103,14 +160,16 @@ router.post('/user-videos', verifyAccessToken, asyncHandler(async (req, res) => 
         openId, 
         count: result.data?.length || 0,
         cursor: result.cursor,
-        hasMore: result.has_more
+        hasMore: result.has_more,
+        mode: 'real'
       });
       
       res.json({
         success: true,
         data: result.data,
         cursor: result.cursor,
-        has_more: result.has_more
+        has_more: result.has_more,
+        mode: 'real'
       });
     } else {
       res.status(400).json({
@@ -123,20 +182,42 @@ router.post('/user-videos', verifyAccessToken, asyncHandler(async (req, res) => 
     logger.error('Get user videos error:', error);
     
     // 判断是否是权限相关错误
-    if (error.response?.status === 401 || 
-        (error.message && error.message.includes('28001'))) {
+    if (error.isPermissionError || 
+        error.response?.status === 401 || 
+        error.response?.status === 403 ||
+        (error.message && (error.message.includes('28001') || error.message.includes('权限')))) {
+      
+      let errorMessage = '访问令牌无效或权限不足';
+      let helpMessage = '请重新进行OAuth授权并申请必要的权限';
+      
+      // 如果是详细的权限错误，提供更具体的信息
+      if (error.apiError) {
+        errorMessage = error.apiError.err_msg || error.apiError.description || errorMessage;
+        // 小程序API错误码
+        if (error.apiError.err_no === 28001018 || error.apiError.error_code === 28001018) {
+          helpMessage = '权限申请未通过或已过期，请在抖音开放平台重新申请ma.item.data权限';
+        } else if (error.apiError.err_no === 28001003 || error.apiError.error_code === 28001003) {
+          helpMessage = 'access_token无效，请重新获取';
+        } else if (error.apiError.error_code === 2100004) {
+          helpMessage = '权限申请未通过或已过期，请在抖音开放平台重新申请video.list.bind权限';
+        }
+      }
+      
       return res.status(401).json({
         success: false,
-        message: '访问令牌无效或权限不足',
+        message: errorMessage,
         code: 'TOKEN_OR_PERMISSION_ERROR',
-        details: error.message
+        help: helpMessage,
+        details: error.message,
+        api_error: error.apiError || null
       });
     }
     
     res.status(500).json({
       success: false,
       message: '获取视频服务异常',
-      code: 'VIDEO_SERVICE_ERROR'
+      code: 'VIDEO_SERVICE_ERROR',
+      details: error.message
     });
   }
 }));
@@ -150,6 +231,13 @@ router.post('/user-comments', verifyAccessToken, asyncHandler(async (req, res) =
   const { accessToken, openId } = req;
   
   logger.info('Get user comments request:', { openId, cursor, count });
+  
+  // 检测是否为mock token，如果是则直接使用mock模式  
+  const isMockToken = accessToken && accessToken.includes('mock_access_token');
+  
+  if (isMockToken) {
+    logger.info('检测到Mock Token，使用模拟评论数据');
+  }
   
   try {
     // 模拟评论数据
@@ -210,6 +298,13 @@ router.post('/user-messages', verifyAccessToken, asyncHandler(async (req, res) =
   
   logger.info('Get user messages request:', { openId, cursor, count });
   
+  // 检测是否为mock token，如果是则直接使用mock模式
+  const isMockToken = accessToken && accessToken.includes('mock_access_token');
+  
+  if (isMockToken) {
+    logger.info('检测到Mock Token，使用模拟私信数据');
+  }
+  
   try {
     // 模拟私信数据
     const messages = [];
@@ -262,6 +357,128 @@ router.post('/user-messages', verifyAccessToken, asyncHandler(async (req, res) =
       success: false,
       message: '获取私信服务异常',
       code: 'MESSAGE_SERVICE_ERROR'
+    });
+  }
+}));
+
+/**
+ * POST /api/douyin/video-base-data
+ * 获取视频基础数据 - 小程序专用API
+ * 权限要求：ma.item.data
+ */
+router.post('/video-base-data', verifyAccessToken, asyncHandler(async (req, res) => {
+  const { item_id } = req.body;
+  const { accessToken, openId, tokenScope } = req;
+  
+  logger.info('Get video base data request:', { 
+    openId: openId ? openId.substring(0, 8) + '...' : 'unknown',
+    itemId: item_id ? item_id.substring(0, 10) + '...' : 'unknown'
+  });
+  
+  // 检查参数
+  if (!item_id) {
+    return res.status(400).json({
+      success: false,
+      message: 'item_id is required',
+      code: 'MISSING_ITEM_ID'
+    });
+  }
+  
+  // 检查权限scope - ma.item.data权限
+  const requiredScopes = ['ma.item.data', 'ma.user.data'];
+  const hasRequiredScope = requiredScopes.some(scope => {
+    if (typeof tokenScope === 'string') {
+      return tokenScope.split(',').some(s => s.trim() === scope);
+    } else if (Array.isArray(tokenScope)) {
+      return tokenScope.includes(scope);
+    }
+    return false;
+  });
+  
+  logger.debug('视频基础数据权限检查:', {
+    tokenScope: tokenScope,
+    requiredScopes: requiredScopes,
+    hasRequiredScope: hasRequiredScope
+  });
+  
+  if (!hasRequiredScope) {
+    logger.error('权限不足：缺少视频数据访问权限', { 
+      tokenScope: tokenScope, 
+      requiredScopes: requiredScopes
+    });
+    return res.status(403).json({
+      success: false,
+      message: '权限不足，需要视频数据访问权限。请申请ma.item.data权限。',
+      code: 'INSUFFICIENT_PERMISSIONS',
+      required_scopes: requiredScopes,
+      current_scope: tokenScope,
+      help: '请在抖音开放平台申请"近30天视频数据查询"能力权限'
+    });
+  }
+  
+  // 检测是否为mock token
+  const isMockToken = accessToken && accessToken.includes('mock_access_token');
+  
+  if (isMockToken) {
+    logger.info('检测到Mock Token，使用模拟视频基础数据');
+    const result = douyinApi._mockGetVideoBaseData(item_id);
+    
+    logger.info('Get video base data success (mock):', {
+      itemId: item_id.substring(0, 10) + '...',
+      totalLike: result.total_like,
+      totalComment: result.total_comment,
+      totalShare: result.total_share,
+      totalPlay: result.total_play
+    });
+    
+    return res.json(result);
+  }
+  
+  try {
+    const result = await douyinApi.getVideoBaseData(accessToken, openId, item_id);
+    
+    logger.info('Get video base data success:', {
+      itemId: item_id.substring(0, 10) + '...',
+      totalLike: result.total_like,
+      totalComment: result.total_comment,
+      totalShare: result.total_share,
+      totalPlay: result.total_play
+    });
+    
+    res.json(result);
+  } catch (error) {
+    logger.error('Get video base data error:', error);
+    
+    if (error.isPermissionError || 
+        error.response?.status === 401 || 
+        error.response?.status === 403 ||
+        (error.message && (error.message.includes('28001') || error.message.includes('权限')))) {
+      
+      let errorMessage = '访问令牌无效或权限不足';
+      let helpMessage = '请在抖音开放平台申请"近30天视频数据查询"能力权限';
+      
+      if (error.apiError) {
+        errorMessage = error.apiError.err_msg || errorMessage;
+        if (error.apiError.err_no === 28001018) {
+          helpMessage = '权限申请未通过，请在抖音开放平台申请ma.item.data权限';
+        }
+      }
+      
+      return res.status(401).json({
+        success: false,
+        message: errorMessage,
+        code: 'TOKEN_OR_PERMISSION_ERROR',
+        help: helpMessage,
+        details: error.message,
+        api_error: error.apiError || null
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      message: '获取视频基础数据服务异常',
+      code: 'VIDEO_BASE_DATA_SERVICE_ERROR',
+      details: error.message
     });
   }
 }));

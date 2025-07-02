@@ -1,0 +1,51 @@
+<view class="privacy-popup" tt:if="{{showPrivacy}}" catchtap="onMaskTap">
+  <view class="privacy-popup-content" catchtap="">
+    <!-- 弹窗标题 -->
+    <view class="privacy-header">
+      <text class="privacy-title">{{miniprogramName}}申请获取以下权限</text>
+      <text class="privacy-subtitle">用于正常的业务功能，请放心使用</text>
+    </view>
+    
+    <!-- 权限列表 -->
+    <view class="privacy-permissions">
+      <view class="permission-item">
+        <view class="permission-icon">👤</view>
+        <view class="permission-info">
+          <text class="permission-name">用户头像、昵称</text>
+          <text class="permission-desc">用于个性化展示和用户身份识别</text>
+        </view>
+      </view>
+      
+      <view class="permission-item">
+        <view class="permission-icon">📊</view>
+        <view class="permission-info">
+          <text class="permission-name">抖音账号数据</text>
+          <text class="permission-desc">获取抖音主页数据、视频数据、评论数据，用于数据分析和内容展示</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 隐私协议链接 -->
+    <view class="privacy-contract">
+      <text class="contract-text">请仔细阅读</text>
+      <text class="contract-link" catchtap="openPrivacyContract">《用户隐私保护指引》</text>
+    </view>
+    
+    <!-- 按钮组 -->
+    <view class="privacy-buttons">
+      <button 
+        class="privacy-btn disagree-btn" 
+        catchtap="handleDisagreePrivacyAuthorization">
+        拒绝
+      </button>
+      
+      <button 
+        class="privacy-btn agree-btn" 
+        id="agree-btn"
+        open-type="agreePrivacyAuthorization"
+        bindagreeprivacyauthorization="handleAgreePrivacyAuthorization">
+        同意
+      </button>
+    </view>
+  </view>
+</view> 

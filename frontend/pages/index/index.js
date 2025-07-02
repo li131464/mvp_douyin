@@ -47,11 +47,20 @@ Page({
       const authorizedScopes = douyinAuth.authorizedScopes || []; // 确保返回数组
       
       console.log('Check login status - isLogin:', isLogin, 'hasOAuthAuth:', hasOAuthAuth);
-      console.log('详细OAuth状态检查:', {
+      console.log('🔍 详细OAuth状态检查:', {
         accessToken: douyinAuth._accessToken ? 'present' : 'missing',
+        accessTokenLength: douyinAuth._accessToken ? douyinAuth._accessToken.length : 0,
+        accessTokenPrefix: douyinAuth._accessToken ? douyinAuth._accessToken.substring(0, 8) + '...' : 'undefined',
+        isMockToken: douyinAuth._accessToken ? douyinAuth._accessToken.includes('mock_access_token') : false,
         authorizedScopes: authorizedScopes,
         scopesLength: authorizedScopes.length,
-        hasOAuthAuth: hasOAuthAuth
+        scopesType: typeof authorizedScopes,
+        hasOAuthAuth: hasOAuthAuth,
+        openId: douyinAuth.openId ? douyinAuth.openId.substring(0, 8) + '...' : 'undefined',
+        unionId: douyinAuth.unionId ? douyinAuth.unionId.substring(0, 8) + '...' : 'undefined',
+        sessionKey: douyinAuth.sessionKey ? 'present' : 'missing',
+        userInfo: douyinAuth.userInfo ? 'present' : 'missing',
+        timestamp: new Date().toISOString()
       });
       
       // 恢复用户主动登录状态
@@ -192,8 +201,25 @@ Page({
       console.log('第二步：获取小程序登录凭证...');
       const loginResult = await new Promise((resolve, reject) => {
         tt.login({
-          success: resolve,
-          fail: reject
+          success: (res) => {
+            console.log('📊 tt.login成功详情:', {
+              code: res.code ? res.code.substring(0, 8) + '...' : 'undefined',
+              codeLength: res.code ? res.code.length : 0,
+              anonymousCode: res.anonymousCode ? 'present' : 'missing',
+              isLogin: res.isLogin,
+              errMsg: res.errMsg,
+              timestamp: new Date().toISOString()
+            });
+            resolve(res);
+          },
+          fail: (err) => {
+            console.error('❌ tt.login失败详情:', {
+              errMsg: err.errMsg,
+              errNo: err.errNo,
+              timestamp: new Date().toISOString()
+            });
+            reject(err);
+          }
         });
       });
       
@@ -205,11 +231,30 @@ Page({
       
       // 第三步：调用后端API进行code2session
       console.log('第三步：调用后端进行身份验证...');
+      console.log('📊 后端身份验证请求详情:', {
+        code: loginResult.code ? loginResult.code.substring(0, 8) + '...' : 'undefined',
+        codeLength: loginResult.code ? loginResult.code.length : 0,
+        userInfoNickName: userInfo.nickName,
+        userInfoAvatarUrl: userInfo.avatarUrl,
+        timestamp: new Date().toISOString()
+      });
+      
       try {
         const sessionResult = await douyinAuth._callCode2Session(loginResult.code);
+        console.log('📊 后端身份验证响应详情:', {
+          success: sessionResult.success,
+          openId: sessionResult.openid ? sessionResult.openid.substring(0, 8) + '...' : 'undefined',
+          unionId: sessionResult.unionid ? sessionResult.unionid.substring(0, 8) + '...' : 'undefined',
+          hasSessionKey: !!sessionResult.session_key,
+          timestamp: new Date().toISOString()
+        });
         console.log('身份验证成功:', sessionResult);
       } catch (error) {
-        console.warn('后端身份验证失败，自动切换到模拟模式:', error.message);
+        console.warn('❌ 后端身份验证失败，自动切换到模拟模式:', {
+          errorMessage: error.message,
+          errorCode: error.code,
+          timestamp: new Date().toISOString()
+        });
         // 不抛出错误，让登录继续进行（已经切换到模拟模式）
       }
       
@@ -263,15 +308,43 @@ Page({
     try {
       tt.showLoading({ title: '申请权限中...' });
       
-      // 申请抖音数据权限
-      const result = await douyinAuth.authorizeWithScopes([
-        'ma.user.data' // 抖音主页数据权限（包含近30天视频数据查询）
-      ]);
+      // 申请抖音小程序数据权限 - 根据官方文档
+      // ma.item.data: 近30天视频数据查询权限（小程序专用）
+      // ma.user.data: 抖音主页数据权限
+      // user_info: 用户基本信息权限
+      const requestedScopes = [
+        'ma.item.data',        // 近30天视频数据查询权限（小程序专用API）
+        'ma.user.data',        // 抖音主页数据权限
+        'user_info'           // 用户基本信息权限
+      ];
+      
+      console.log('🔍 OAuth授权请求详情:', {
+        requestedScopes: requestedScopes,
+        scopesCount: requestedScopes.length,
+        currentOAuthStatus: douyinAuth.hasOAuthAuth,
+        currentScopes: douyinAuth.authorizedScopes || [],
+        hasAccessToken: !!douyinAuth._accessToken,
+        timestamp: new Date().toISOString()
+      });
+      
+      const result = await douyinAuth.authorizeWithScopes(requestedScopes);
       
       tt.hideLoading();
       
       if (result.success) {
-        console.log('授权成功，结果:', result);
+        console.log('✅ OAuth授权成功，详细结果:', {
+          success: result.success,
+          hasAccessToken: !!result.accessToken,
+          accessTokenLength: result.accessToken ? result.accessToken.length : 0,
+          accessTokenPrefix: result.accessToken ? result.accessToken.substring(0, 8) + '...' : 'undefined',
+          isMockToken: result.accessToken ? result.accessToken.includes('mock_access_token') : false,
+          authorizedScopes: result.authorizedScopes || [],
+          scopesCount: result.authorizedScopes ? result.authorizedScopes.length : 0,
+          fallbackMode: result.fallbackMode || false,
+          isRealData: result.isRealData || false,
+          message: result.message,
+          timestamp: new Date().toISOString()
+        });
         
         // 等待一小段时间确保状态保存完成
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -558,5 +631,44 @@ Page({
     }
   },
 
+  /**
+   * @description: 隐私授权同意处理
+   */
+  onPrivacyAgree(e) {
+    console.log('✅ 用户同意隐私授权:', e.detail);
+    
+    // 用户同意隐私授权后，可以继续执行相关的隐私接口调用
+    tt.showToast({
+      title: '隐私授权成功',
+      icon: 'success',
+      duration: 2000
+    });
+    
+    // 记录隐私授权状态
+    tt.setStorageSync('privacyAuthorized', {
+      authorized: true,
+      timestamp: Date.now()
+    });
+  },
+
+  /**
+   * @description: 隐私授权拒绝处理
+   */
+  onPrivacyDisagree(e) {
+    console.log('❌ 用户拒绝隐私授权:', e.detail);
+    
+    tt.showModal({
+      title: '权限被拒绝',
+      content: '为了使用完整功能，需要您同意隐私协议。您可以重新点击相关功能按钮再次授权。',
+      showCancel: false,
+      confirmText: '我知道了'
+    });
+    
+    // 记录隐私拒绝状态
+    tt.setStorageSync('privacyAuthorized', {
+      authorized: false,
+      timestamp: Date.now()
+    });
+  },
 
 });

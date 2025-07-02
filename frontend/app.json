@@ -11,13 +11,21 @@
     "navigationBarTitleText": "抖音数据获取",
     "navigationBarTextStyle":"black"
   },
+  "usingComponents": {
+    "privacy-popup": "/components/privacy-popup/privacy-popup"
+  },
   "requiredPrivacyInfos": [
-    "getUserProfile"
+    "getUserProfile",
+    "douyinAccountData"
   ],
   "privacyDescList": [
     {
       "privacyKey": "getUserProfile",
       "privacyText": "获取用户头像昵称，用于个性化展示和用户身份识别"
+    },
+    {
+      "privacyKey": "douyinAccountData", 
+      "privacyText": "获取抖音账号数据（用户主页数据、视频数据、评论数据），用于数据分析和内容展示"
     }
   ]
 }
