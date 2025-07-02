@@ -33,6 +33,7 @@ function _isDevToolsEnv() {
 
 class DouyinAuth {
   constructor() {
+    // 初始化状态
     this._isLoggedIn = false;
     this._userInfo = null;
     this._accessToken = null;
@@ -43,8 +44,17 @@ class DouyinAuth {
     this._expiresAt = null;
     this._authorizedScopes = [];
     
-    // 从本地存储恢复状态
+    console.log('🔄 DouyinAuth初始化，准备从存储加载状态...');
+    
+    // 从存储恢复状态
     this._loadFromStorage();
+    
+    console.log('✅ DouyinAuth初始化完成，当前状态:', {
+      hasAccessToken: !!this._accessToken,
+      scopesLength: this._authorizedScopes.length,
+      hasOAuthAuth: this.hasOAuthAuth,
+      timestamp: new Date().toISOString()
+    });
   }
 
   /**
@@ -1014,106 +1024,157 @@ class DouyinAuth {
    * 调用后端API的通用方法
    */
   async _callBackendAPI(endpoint, options = {}) {
-    // 动态获取API地址
+    const { method = 'GET', body = null, headers = {} } = options;
+    
     const baseUrl = getBackendApiBase();
     const url = `${baseUrl}${endpoint}`;
-    const config = {
-      method: options.method || 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-      },
-      ...options
-    };
     
-    if (options.body) {
-      config.data = options.body; // 小程序使用data字段
-      config.body = JSON.stringify(options.body); // fetch使用body字段
-    }
+    console.log(`🌐 调用后端API: ${method} ${endpoint}`, {
+      url: url,
+      hasBody: !!body,
+      bodyKeys: body ? Object.keys(body) : [],
+      headers: headers,
+      isMiniprogramEnv: typeof tt !== 'undefined' && tt.request,
+      timestamp: new Date().toISOString()
+    });
     
     try {
-      console.log('调用后端API:', url, '方法:', config.method, '数据:', options.body);
-      
       // 检查是否在小程序环境中
       if (typeof tt !== 'undefined' && tt.request) {
         // 使用小程序的网络请求API
-        const result = await this._promisify(tt.request)({
-          url: url,
-          method: config.method,
-          data: options.body,
-          header: config.headers,
-          timeout: 15000 // 15秒超时
-        });
+        console.log('📱 使用小程序网络请求');
         
-        console.log('小程序请求完整结果:', result);
-        console.log('HTTP状态码:', result.statusCode);
-        console.log('响应数据:', result.data);
+        const requestConfig = {
+          url: url,
+          method: method,
+          data: body || {},
+          header: {
+            'Content-Type': 'application/json',
+            ...headers
+          },
+          timeout: 15000 // 15秒超时
+        };
+        
+        console.log('📤 小程序请求配置:', requestConfig);
+        
+        const result = await this._promisify(tt.request)(requestConfig);
+        
+        console.log('📨 小程序响应详情:', {
+          statusCode: result.statusCode,
+          data: result.data,
+          header: result.header,
+          errMsg: result.errMsg
+        });
         
         if (result.statusCode >= 200 && result.statusCode < 300) {
           if (result.data && typeof result.data === 'object') {
-            if (result.data.success !== false) {
-              // 如果success字段不是false，就认为成功
-              return result.data;
-            } else {
-              throw new Error(result.data.message || '后端API返回错误');
-            }
+            console.log('✅ 小程序API调用成功:', {
+              endpoint: endpoint,
+              statusCode: result.statusCode,
+              dataKeys: result.data ? Object.keys(result.data) : [],
+              success: result.data.success
+            });
+            return result.data;
           } else {
-            // 如果没有返回数据或数据格式不正确
-            console.warn('后端返回的数据格式异常:', result.data);
+            console.error('❌ 后端返回的数据格式异常:', result.data);
             throw new Error('后端返回数据格式不正确');
           }
         } else {
-          throw new Error(`HTTP ${result.statusCode}: ${result.data?.message || result.errMsg || '请求失败'}`);
+          console.error('❌ 小程序API调用失败:', {
+            statusCode: result.statusCode,
+            data: result.data,
+            errMsg: result.errMsg,
+            endpoint: endpoint
+          });
+          
+          const error = new Error(result.data?.message || result.errMsg || `HTTP ${result.statusCode}: 请求失败`);
+          error.status = result.statusCode;
+          error.response = result.data;
+          error.isPermissionError = result.statusCode === 401 || result.statusCode === 403;
+          throw error;
         }
       } else {
         // 开发环境使用fetch
-        const response = await fetch(url, config);
-        const data = await response.json();
+        console.log('💻 使用浏览器网络请求');
         
-        console.log('Fetch请求结果:', response.status, data);
-        
-        if (response.ok) {
-          if (data.success !== false) {
-            return data;
-          } else {
-            throw new Error(data.message || '后端API返回错误');
+        const requestOptions = {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json',
+            ...headers
           }
-        } else {
-          throw new Error(`HTTP ${response.status}: ${data.message || '请求失败'}`);
+        };
+        
+        if (body && method !== 'GET') {
+          requestOptions.body = JSON.stringify(body);
+          console.log('📤 请求体内容:', JSON.stringify(body, null, 2));
         }
+        
+        console.log('📡 发送请求配置:', {
+          method: requestOptions.method,
+          url: url,
+          headers: requestOptions.headers,
+          hasBody: !!requestOptions.body,
+          bodyLength: requestOptions.body ? requestOptions.body.length : 0
+        });
+        
+        const response = await fetch(url, requestOptions);
+        
+        console.log('📨 收到响应:', {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          ok: response.ok
+        });
+        
+        const responseText = await response.text();
+        console.log('📄 响应原始内容:', responseText);
+        
+        let data;
+        try {
+          data = JSON.parse(responseText);
+          console.log('✅ 响应JSON解析成功:', data);
+        } catch (parseError) {
+          console.error('❌ 响应JSON解析失败:', parseError);
+          throw new Error(`服务器响应格式错误: ${responseText.substring(0, 200)}`);
+        }
+        
+        if (!response.ok) {
+          console.error('❌ API调用失败:', {
+            status: response.status,
+            statusText: response.statusText,
+            data: data,
+            endpoint: endpoint
+          });
+          
+          const error = new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
+          error.status = response.status;
+          error.response = data;
+          error.isPermissionError = response.status === 401 || response.status === 403;
+          throw error;
+        }
+        
+        console.log('✅ API调用成功:', {
+          endpoint: endpoint,
+          status: response.status,
+          dataKeys: data ? Object.keys(data) : [],
+          success: data.success
+        });
+        
+        return data;
       }
     } catch (error) {
-      console.error('后端API调用失败:', error);
-      console.error('错误详情:', {
-        message: error.message,
-        errMsg: error.errMsg,
-        errNo: error.errNo,
-        statusCode: error.statusCode
+      console.error('❌ API调用异常:', {
+        endpoint: endpoint,
+        error: error.message,
+        stack: error.stack,
+        status: error.status,
+        isPermissionError: error.isPermissionError,
+        timestamp: new Date().toISOString()
       });
       
-      // 分析错误类型，提供更友好的错误信息
-      let errorMsg = '后端API调用失败';
-      const isDevTools = _isDevToolsEnv();
-      
-      if (error.errMsg) {
-        if (error.errMsg.includes('timeout') || error.errMsg.includes('连接超时')) {
-          errorMsg = `网络连接超时，无法访问服务器 ${baseUrl}`;
-        } else if (error.errMsg.includes('fail') || error.errMsg.includes('network')) {
-          errorMsg = `网络连接失败，无法访问服务器 ${baseUrl}`;
-        } else if (error.errMsg.includes('ssl') || error.errMsg.includes('certificate')) {
-          errorMsg = `SSL证书验证失败，请检查服务器配置`;
-        } else {
-          errorMsg = `网络请求失败: ${error.errMsg}`;
-        }
-      } else if (error.message) {
-        errorMsg = error.message;
-      }
-      
-      console.warn('最终错误信息:', errorMsg);
-      console.warn('请求的URL:', url);
-      console.warn('环境信息:', { isDevTools, baseUrl });
-      
-      throw new Error(errorMsg);
+      // 重新抛出错误，保持错误信息
+      throw error;
     }
   }
 
@@ -1174,16 +1235,36 @@ class DouyinAuth {
     try {
       let stateStr = null;
       
+      console.log('🔍 开始从存储加载状态...');
+      
       // 检查是否在抖音环境中
       if (typeof tt !== 'undefined' && tt.getStorageSync) {
         stateStr = tt.getStorageSync('douyin_auth_state');
+        console.log('📱 使用小程序存储，数据长度:', stateStr ? stateStr.length : 0);
       } else {
         // 开发环境使用localStorage
         stateStr = localStorage.getItem('douyin_auth_state');
+        console.log('💻 使用浏览器存储，数据长度:', stateStr ? stateStr.length : 0);
       }
       
       if (stateStr) {
         const state = JSON.parse(stateStr);
+        
+        console.log('🔧 解析存储的状态数据:', {
+          hasIsLoggedIn: 'isLoggedIn' in state,
+          hasUserInfo: 'userInfo' in state,
+          hasAccessToken: 'accessToken' in state && !!state.accessToken,
+          hasRefreshToken: 'refreshToken' in state && !!state.refreshToken,
+          hasOpenId: 'openId' in state && !!state.openId,
+          hasUnionId: 'unionId' in state && !!state.unionId,
+          hasSessionKey: 'sessionKey' in state && !!state.sessionKey,
+          hasExpiresAt: 'expiresAt' in state,
+          hasAuthorizedScopes: 'authorizedScopes' in state && Array.isArray(state.authorizedScopes),
+          scopesLength: state.authorizedScopes ? state.authorizedScopes.length : 0,
+          accessTokenLength: state.accessToken ? state.accessToken.length : 0
+        });
+        
+        // 恢复状态
         this._isLoggedIn = state.isLoggedIn || false;
         this._userInfo = state.userInfo || null;
         this._accessToken = state.accessToken || null;
@@ -1193,9 +1274,27 @@ class DouyinAuth {
         this._sessionKey = state.sessionKey || null;
         this._expiresAt = state.expiresAt || null;
         this._authorizedScopes = state.authorizedScopes || [];
+        
+        console.log('✅ 状态恢复成功:', {
+          isLoggedIn: this._isLoggedIn,
+          hasUserInfo: !!this._userInfo,
+          hasAccessToken: !!this._accessToken,
+          accessTokenLength: this._accessToken ? this._accessToken.length : 0,
+          hasOpenId: !!this._openId,
+          authorizedScopesLength: this._authorizedScopes.length,
+          authorizedScopes: this._authorizedScopes,
+          hasOAuthAuth: this.hasOAuthAuth
+        });
+        
+      } else {
+        console.log('⚠️ 存储中没有找到状态数据');
       }
     } catch (error) {
-      console.error('恢复状态失败:', error);
+      console.error('❌ 恢复状态失败:', {
+        error: error.message,
+        stack: error.stack,
+        stateStr: stateStr ? stateStr.substring(0, 100) + '...' : 'null'
+      });
     }
   }
 
@@ -1289,6 +1388,73 @@ class DouyinAuth {
     } catch (error) {
       console.error('获取调试信息失败:', error);
       return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * 获取用户基本信息 - 使用user_info权限测试
+   * 这个API专门用于测试user_info权限是否有效
+   */
+  async getUserInfo() {
+    await this._ensureValidToken();
+    
+    try {
+      console.log('📊 请求用户信息API详情:', {
+        endpoint: '/api/douyin/user-info',
+        openId: this._openId ? this._openId.substring(0, 8) + '...' : 'undefined',
+        hasAccessToken: !!this._accessToken,
+        accessTokenLength: this._accessToken ? this._accessToken.length : 0,
+        isMockToken: this._accessToken ? this._accessToken.includes('mock_access_token') : false,
+        authorizedScopes: this._authorizedScopes,
+        hasUserInfoScope: this._authorizedScopes ? this._authorizedScopes.includes('user_info') : false,
+        timestamp: new Date().toISOString()
+      });
+      
+      // 调用后端API获取用户基本信息
+      const result = await this._callBackendAPI('/api/douyin/user-info', {
+        method: 'POST',
+        body: {
+          openId: this._openId
+        }
+      });
+      
+      console.log('📊 用户信息API响应详情:', {
+        success: true,
+        hasUserInfo: !!result.user,
+        nickname: result.user?.nickname || '未获取',
+        avatar: result.user?.avatar ? '已获取' : '未获取',
+        mode: result.mode || 'unknown',
+        timestamp: new Date().toISOString()
+      });
+      
+      return {
+        success: true,
+        user: result.user,
+        mode: result.mode
+      };
+    } catch (error) {
+      console.error('❌ 获取用户信息失败详情:', {
+        errorMessage: error.message,
+        errorCode: error.code,
+        isPermissionError: error.isPermissionError,
+        status: error.status,
+        response: error.response,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
+      
+      // 处理权限相关错误，提供更友好的错误信息
+      if (error.message && error.message.includes('401')) {
+        const permissionError = new Error('user_info权限验证失败：访问令牌无效或权限不足。请重新进行OAuth授权。');
+        permissionError.isPermissionError = true;
+        throw permissionError;
+      } else if (error.message && error.message.includes('403')) {
+        const permissionError = new Error('user_info权限不足：缺少用户信息访问权限。请确保已申请user_info权限。');
+        permissionError.isPermissionError = true;
+        throw permissionError;
+      }
+      
+      throw error;
     }
   }
 }

@@ -396,7 +396,7 @@ class DouyinAPI {
           access_token: extractedTokenData.access_token || `api_token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           refresh_token: extractedTokenData.refresh_token || `api_refresh_${Date.now()}`,
           expires_in: extractedTokenData.expires_in || 7200,
-          scope: extractedTokenData.scope || 'ma.item.data,ma.user.data,user_info', // 包含视频数据访问权限
+          scope: extractedTokenData.scope || 'ma.user.data,user_info', // 只包含确实可能获得的权限
           rawApiResponse: response.data // 保留原始响应
         };
         
@@ -424,7 +424,7 @@ class DouyinAPI {
         access_token: `api_fallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         refresh_token: `api_fallback_refresh_${Date.now()}`,
         expires_in: 7200,
-        scope: 'ma.item.data,ma.user.data,user_info',
+        scope: 'ma.user.data,user_info',
         rawApiResponse: response.data,
         note: 'API调用成功但Token格式不标准'
       };
@@ -517,7 +517,7 @@ class DouyinAPI {
         return this._mockGetUserVideos(cursor, count);
       }
       
-      logger.info('Attempting real Douyin miniapp API call for user videos');
+      logger.info('Attempting real Douyin API call for user videos');
       logger.debug('getUserVideos parameters:', {
         openId: openId,
         cursor: cursor,
@@ -525,9 +525,9 @@ class DouyinAPI {
         hasAccessToken: !!accessToken
       });
       
-      // 使用小程序专用的视频列表API端点
-      // 参考：https://open.douyin.com/api/apps/v1/item/list/
-      const apiUrl = '/api/apps/v1/item/list/';
+      // 尝试使用标准的视频列表API端点
+      // 先测试基础用户视频接口
+      const apiUrl = '/video/list/';
       const requestData = {
         open_id: openId,
         cursor: cursor,
@@ -535,7 +535,7 @@ class DouyinAPI {
         access_token: accessToken
       };
       
-      logger.debug('调用抖音视频列表API (小程序专用格式):', {
+      logger.debug('调用抖音视频列表API (标准格式):', {
         url: apiUrl,
         data: requestData,
         hasAccessToken: !!accessToken,
@@ -546,7 +546,7 @@ class DouyinAPI {
         baseURL: this.baseURL
       });
       
-      // 使用小程序API格式 - POST请求，参数在body中
+      // 使用POST请求
       const response = await this.client.post(apiUrl, requestData, {
         headers: {
           'Content-Type': 'application/json'
@@ -565,48 +565,39 @@ class DouyinAPI {
       logger.info('📊 视频列表响应详细分析:', {
         responseKeys: Object.keys(response.data),
         responseSize: JSON.stringify(response.data).length,
-        hasErrNo: !!response.data.err_no,
-        errNo: response.data.err_no,
-        errMsg: response.data.err_msg,
+        hasError: !!response.data.error,
+        hasErrorDescription: !!response.data.error_description,
         hasData: !!response.data.data,
         hasDataList: !!(response.data.data && response.data.data.list),
         videoCount: response.data.data?.list?.length || 0,
         hasCursor: !!(response.data.data && 'cursor' in response.data.data),
         hasMore: !!(response.data.data && 'has_more' in response.data.data),
         httpStatus: response.status,
-        httpStatusText: response.statusText,
-        logId: response.data.log_id
+        httpStatusText: response.statusText
       });
       
-      // 检查小程序API响应格式（使用err_no和err_msg）
-      if (response.data.err_no && response.data.err_no !== 0) {
-        logger.error('Douyin miniapp API error:', {
-          err_no: response.data.err_no,
-          err_msg: response.data.err_msg,
-          log_id: response.data.log_id
+      // 检查标准API响应格式
+      if (response.data.error) {
+        logger.error('Douyin video list API error:', {
+          error: response.data.error,
+          error_description: response.data.error_description
         });
         
-        // 检查是否是权限相关错误
-        if ([28001003, 28001008, 28001014, 28001018, 28001019, 28001005, 28001016, 28001006, 28003017, 28001007].includes(response.data.err_no)) {
-          const permissionError = new Error(`抖音API权限错误: ${response.data.err_msg || '权限不足或access_token无效'}`);
-          permissionError.isPermissionError = true;
-          permissionError.apiError = {
-            err_no: response.data.err_no,
-            err_msg: response.data.err_msg,
-            log_id: response.data.log_id
-          };
-          throw permissionError;
-        }
-        
-        throw new Error(`Douyin API Error [${response.data.err_no}]: ${response.data.err_msg}`);
+        const permissionError = new Error(`抖音视频列表API错误: ${response.data.error_description || response.data.error}`);
+        permissionError.isPermissionError = true;
+        permissionError.apiError = {
+          error: response.data.error,
+          error_description: response.data.error_description
+        };
+        throw permissionError;
       }
       
-      // 按照小程序API文档解析响应数据
+      // 按照标准API响应解析数据
       const result = {
         success: true,
-        data: response.data.data?.list || [],
-        cursor: response.data.data?.cursor || cursor,
-        has_more: response.data.data?.has_more || false
+        data: response.data.data?.list || response.data.list || [],
+        cursor: response.data.data?.cursor || response.data.cursor || cursor,
+        has_more: response.data.data?.has_more || response.data.has_more || false
       };
       
       logger.info('Real Douyin API user videos call successful:', {
@@ -630,22 +621,19 @@ class DouyinAPI {
       // 如果是权限相关错误，不要回退到mock模式，直接抛出错误
       if (error.response?.status === 401 || 
           error.response?.status === 403 ||
-          error.isPermissionError ||
-          (error.response?.data?.err_no && 
-           [28001003, 28001008, 28001014, 28001018, 28001019, 28001005, 28001016, 28001006, 28003017, 28001007].includes(error.response.data.err_no))) {
+          error.isPermissionError) {
         
         // 构造详细的权限错误信息
         const errorInfo = {
           status: error.response?.status,
-          err_no: error.response?.data?.err_no,
-          err_msg: error.response?.data?.err_msg,
-          log_id: error.response?.data?.log_id
+          error: error.response?.data?.error,
+          error_description: error.response?.data?.error_description
         };
         
-        logger.error('抖音API权限错误，不使用Mock模式:', errorInfo);
+        logger.error('抖音视频列表API权限错误，不使用Mock模式:', errorInfo);
         
         // 抛出更详细的权限错误
-        const permissionError = new Error(`抖音API权限错误: ${errorInfo.err_msg || error.message || '访问令牌无效或权限不足'}`);
+        const permissionError = new Error(`抖音视频列表API权限错误: ${errorInfo.error_description || error.message || '访问令牌无效或权限不足'}`);
         permissionError.isPermissionError = true;
         permissionError.apiError = errorInfo;
         throw permissionError;
@@ -874,6 +862,143 @@ class DouyinAPI {
     } catch (error) {
       logger.error('Get user messages failed:', error);
       throw error;
+    }
+  }
+
+  /**
+   * 获取用户基本信息 - 使用user_info权限
+   * API文档：https://open.douyin.com/api/apps/v2/user/info/
+   * 权限要求：user_info
+   */
+  async getUserInfo(accessToken, openId) {
+    try {
+      if (!this.appId || !this.appSecret) {
+        logger.info('No API credentials configured, using mock mode for user info');
+        return this._mockGetUserInfo(openId);
+      }
+      
+      logger.info('Attempting real Douyin API call for user info');
+      logger.debug('getUserInfo parameters:', {
+        openId: openId,
+        hasAccessToken: !!accessToken,
+        accessTokenLength: accessToken ? accessToken.length : 0
+      });
+      
+      // 尝试使用抖音开放平台的标准用户信息API
+      // 参考官方文档的用户信息接口
+      const apiUrl = '/oauth/userinfo/';
+      const requestData = {
+        open_id: openId,
+        access_token: accessToken
+      };
+      
+      logger.debug('调用抖音用户信息API (标准OAuth格式):', {
+        url: apiUrl,
+        data: requestData,
+        hasAccessToken: !!accessToken,
+        accessTokenLength: accessToken ? accessToken.length : 0,
+        baseURL: this.baseURL,
+        requestTime: new Date().toISOString()
+      });
+      
+      // 使用POST请求
+      const response = await this.client.post(apiUrl, requestData, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      logger.info('🔍 完整的抖音用户信息API响应:', JSON.stringify(response.data, null, 2));
+      
+      logger.debug('Douyin user info API response:', {
+        status: response.status,
+        data: response.data
+      });
+      
+      // 输出详细的用户信息响应分析
+      logger.info('📊 用户信息响应详细分析:', {
+        responseKeys: Object.keys(response.data),
+        responseSize: JSON.stringify(response.data).length,
+        hasError: !!response.data.error,
+        hasErrorDescription: !!response.data.error_description,
+        hasData: !!response.data.data,
+        hasUserInfo: !!(response.data.data && response.data.data.user),
+        httpStatus: response.status,
+        httpStatusText: response.statusText
+      });
+      
+      // 检查标准OAuth API响应格式
+      if (response.data.error) {
+        logger.error('Douyin user info API error:', {
+          error: response.data.error,
+          error_description: response.data.error_description
+        });
+        
+        const permissionError = new Error(`抖音用户信息API错误: ${response.data.error_description || response.data.error}`);
+        permissionError.isPermissionError = true;
+        permissionError.apiError = {
+          error: response.data.error,
+          error_description: response.data.error_description
+        };
+        throw permissionError;
+      }
+      
+      // 解析用户信息数据（标准OAuth格式）
+      const userInfo = response.data.data || response.data;
+      
+      const result = {
+        success: true,
+        user: {
+          openid: userInfo.openid || userInfo.open_id || openId,
+          nickname: userInfo.nickname || userInfo.nick_name || '',
+          avatar: userInfo.avatar || userInfo.avatar_url || userInfo.headimgurl || '',
+          gender: userInfo.gender || 0, // 0:未知, 1:男, 2:女
+          country: userInfo.country || '',
+          province: userInfo.province || '',
+          city: userInfo.city || '',
+          language: userInfo.language || ''
+        }
+      };
+      
+      logger.info('Real Douyin API user info call successful:', {
+        hasUserInfo: !!result.user,
+        nickname: result.user.nickname ? '已获取' : '未获取',
+        avatar: result.user.avatar ? '已获取' : '未获取'
+      });
+      
+      return result;
+    } catch (error) {
+      logger.error('Real Douyin API user info call failed:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url,
+        method: error.config?.method
+      });
+      
+      // 如果是权限相关错误，不要回退到mock模式，直接抛出错误
+      if (error.response?.status === 401 || 
+          error.response?.status === 403 ||
+          error.isPermissionError) {
+        
+        const errorInfo = {
+          status: error.response?.status,
+          error: error.response?.data?.error,
+          error_description: error.response?.data?.error_description
+        };
+        
+        logger.error('抖音用户信息API权限错误，不使用Mock模式:', errorInfo);
+        
+        const permissionError = new Error(`抖音用户信息API权限错误: ${errorInfo.error_description || error.message || 'user_info权限不足或访问令牌无效'}`);
+        permissionError.isPermissionError = true;
+        permissionError.apiError = errorInfo;
+        throw permissionError;
+      }
+      
+      // 其他错误回退到模拟模式
+      logger.warn('Falling back to mock mode for user info due to API error');
+      return this._mockGetUserInfo(openId);
     }
   }
 
@@ -1138,6 +1263,24 @@ class DouyinAPI {
     
     return result;
   }
+
+  _mockGetUserInfo(openId) {
+    return {
+      success: true,
+      mode: 'mock',
+      user: {
+        openid: openId,
+        nickname: '测试用户',
+        avatar: 'https://example.com/avatar.png',
+        gender: 1,
+        country: '中国',
+        province: '北京',
+        city: '北京',
+        language: 'zh_CN'
+      },
+      note: '这是模拟数据，用于开发和测试'
+    };
+  }
 }
 
-module.exports = new DouyinAPI(); 
+module.exports = new DouyinAPI();

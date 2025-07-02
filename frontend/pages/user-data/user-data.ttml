@@ -170,5 +170,45 @@
         <text>加载中...</text>
       </view>
     </view>
+
+    <!-- 权限测试按钮 -->
+    <view class="test-buttons">
+      <button bindtap="testGetUserInfo" class="test-button">
+        🔍 测试user_info权限
+      </button>
+    </view>
+
+    <!-- 用户信息显示区域 -->
+    <view class="user-info-section" tt:if="{{userInfo}}">
+      <view class="section-header">
+        <text class="section-title">👤 用户信息 (user_info权限)</text>
+      </view>
+      <view class="user-info-content">
+        <view class="user-info-item">
+          <text class="info-label">用户ID:</text>
+          <text class="info-value">{{userInfo.openid || '未获取'}}</text>
+        </view>
+        <view class="user-info-item">
+          <text class="info-label">昵称:</text>
+          <text class="info-value">{{userInfo.nickname || '未获取'}}</text>
+        </view>
+        <view class="user-info-item">
+          <text class="info-label">头像:</text>
+          <text class="info-value">{{userInfo.avatar ? '已获取' : '未获取'}}</text>
+        </view>
+        <view class="user-info-item">
+          <text class="info-label">性别:</text>
+          <text class="info-value">{{userInfo.gender === 1 ? '男' : userInfo.gender === 2 ? '女' : '未知'}}</text>
+        </view>
+        <view class="user-info-item">
+          <text class="info-label">地区:</text>
+          <text class="info-value">{{userInfo.country}}-{{userInfo.province}}-{{userInfo.city}}</text>
+        </view>
+        <view class="user-info-item">
+          <text class="info-label">语言:</text>
+          <text class="info-value">{{userInfo.language || '未获取'}}</text>
+        </view>
+      </view>
+    </view>
   </view>
 </view> 

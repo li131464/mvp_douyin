@@ -46,14 +46,25 @@ const verifyAccessToken = asyncHandler(async (req, res, next) => {
     });
   }
   
+  // 设置req.auth对象，统一格式
+  req.auth = {
+    access_token: tokenData.access_token,
+    refresh_token: tokenData.refresh_token,
+    scope: tokenData.scope,
+    expires_in: tokenData.expires_in,
+    created_at: tokenData.created_at
+  };
+  
+  // 兼容旧的属性名
   req.accessToken = tokenData.access_token;
   req.openId = openId;
   req.tokenScope = tokenData.scope;
   
   logger.debug('access_token验证成功', {
     openId: openId,
-    hasAccessToken: !!req.accessToken,
-    scope: req.tokenScope
+    hasAccessToken: !!req.auth.access_token,
+    scope: req.auth.scope,
+    authObjectKeys: Object.keys(req.auth)
   });
   
   next();
@@ -526,6 +537,65 @@ router.get('/user-profile/:openId', asyncHandler(async (req, res) => {
       success: false,
       message: '获取用户信息服务异常',
       code: 'PROFILE_SERVICE_ERROR'
+    });
+  }
+}));
+
+/**
+ * POST /api/douyin/user-info
+ * 获取用户基本信息 (使用user_info权限)
+ */
+router.post('/user-info', verifyAccessToken, asyncHandler(async (req, res) => {
+  const { openId } = req.body;
+  const { access_token } = req.auth;
+  
+  logger.info('Get user info request:', { openId });
+  logger.debug('Token scope:', req.auth.scope);
+  
+  // 权限检查
+  logger.info('🔍 user_info权限检查详情分析:', {
+    requestedScope: 'user_info',
+    tokenScope: req.auth.scope,
+    hasScopeField: !!req.auth.scope,
+    scopeType: typeof req.auth.scope,
+    scopeValue: req.auth.scope,
+    hasUserInfoPermission: req.auth.scope ? req.auth.scope.includes('user_info') : false,
+    openId: openId,
+    hasAccessToken: !!access_token,
+    accessTokenLength: access_token ? access_token.length : 0
+  });
+  
+  try {
+    const result = await douyinApi.getUserInfo(access_token, openId);
+    
+    logger.info('Get user info success:', {
+      hasUserInfo: !!result.user,
+      nickname: result.user?.nickname ? '已获取' : '未获取',
+      mode: result.mode || 'real'
+    });
+    
+    res.json({
+      success: true,
+      user: result.user,
+      mode: result.mode
+    });
+  } catch (error) {
+    logger.error('Get user info error:', error.message);
+    
+    // 处理权限错误
+    if (error.isPermissionError) {
+      return res.status(401).json({
+        success: false,
+        message: error.message,
+        code: 'PERMISSION_ERROR',
+        apiError: error.apiError
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      message: '获取用户信息失败',
+      code: 'API_ERROR'
     });
   }
 }));

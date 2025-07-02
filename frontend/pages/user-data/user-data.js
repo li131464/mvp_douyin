@@ -33,19 +33,60 @@ Page({
   onLoad() {
     console.log('用户数据页面加载');
     
+    // 强制重新加载授权状态
+    console.log('🔄 强制重新加载授权状态...');
+    douyinAuth._loadFromStorage();
+    
+    // 详细的状态调试信息
+    console.log('📊 OAuth授权状态详细检查:', {
+      hasOAuthAuth: douyinAuth.hasOAuthAuth,
+      accessToken: douyinAuth._accessToken ? douyinAuth._accessToken.substring(0, 20) + '...' : 'null',
+      accessTokenLength: douyinAuth._accessToken ? douyinAuth._accessToken.length : 0,
+      authorizedScopes: douyinAuth.authorizedScopes,
+      scopesLength: douyinAuth.authorizedScopes ? douyinAuth.authorizedScopes.length : 0,
+      openId: douyinAuth._openId ? douyinAuth._openId.substring(0, 8) + '...' : 'undefined',
+      unionId: douyinAuth._unionId ? douyinAuth._unionId.substring(0, 8) + '...' : 'undefined',
+      sessionKey: douyinAuth._sessionKey ? 'present' : 'missing',
+      timestamp: new Date().toISOString(),
+      storageCheck: this.checkStorageState()
+    });
+    
     // 检查授权状态
     if (!douyinAuth.hasOAuthAuth) {
-      tt.showToast({
-        title: '请先完成OAuth授权',
-        icon: 'none',
-        duration: 2000
-      });
+      console.error('❌ OAuth授权检查失败 - 显示错误提示');
       
-      setTimeout(() => {
+      // 尝试手动检查存储中的数据
+      const storageData = this.checkStorageState();
+      console.log('🔍 存储中的数据:', storageData);
+      
+      tt.showModal({
+        title: 'OAuth授权状态异常',
+        content: `未检测到有效的OAuth授权状态\n\n请重新进行OAuth授权\n\n调试信息:\n- Access Token: ${douyinAuth._accessToken ? '有' : '无'}\n- 权限范围: ${douyinAuth.authorizedScopes ? douyinAuth.authorizedScopes.length : 0}个`,
+        showCancel: true,
+        cancelText: '查看详情',
+        confirmText: '重新授权',
+        success: (res) => {
+          if (res.confirm) {
+            // 跳转回首页重新授权
         tt.navigateBack();
-      }, 2000);
+          } else {
+            // 显示详细的调试信息
+            console.table({
+              'Access Token': douyinAuth._accessToken ? douyinAuth._accessToken.substring(0, 30) + '...' : 'null',
+              'Token长度': douyinAuth._accessToken ? douyinAuth._accessToken.length : 0,
+              'OpenID': douyinAuth._openId ? douyinAuth._openId.substring(0, 15) + '...' : 'undefined', 
+              'UnionID': douyinAuth._unionId ? douyinAuth._unionId.substring(0, 15) + '...' : 'undefined',
+              '权限列表': JSON.stringify(douyinAuth.authorizedScopes),
+              '权限数量': douyinAuth.authorizedScopes ? douyinAuth.authorizedScopes.length : 0,
+              '存储状态': storageData ? '有数据' : '无数据'
+            });
+          }
+        }
+      });
       return;
     }
+    
+    console.log('✅ OAuth授权状态检查通过');
     
     // 获取用户信息
     const isRealData = douyinAuth._accessToken && !douyinAuth._accessToken.includes('mock');
@@ -74,6 +115,33 @@ Page({
       activeTab: this.data.activeTab,
       timestamp: new Date().toISOString()
     });
+  },
+
+  // 检查存储状态
+  checkStorageState() {
+    try {
+      let storageData = null;
+      if (typeof tt !== 'undefined' && tt.getStorageSync) {
+        storageData = tt.getStorageSync('douyin_auth_state');
+      }
+      
+      if (storageData) {
+        const parsed = JSON.parse(storageData);
+        return {
+          hasData: true,
+          hasAccessToken: !!parsed.accessToken,
+          hasScopes: !!parsed.authorizedScopes && parsed.authorizedScopes.length > 0,
+          scopesCount: parsed.authorizedScopes ? parsed.authorizedScopes.length : 0,
+          hasOpenId: !!parsed.openId,
+          tokenLength: parsed.accessToken ? parsed.accessToken.length : 0
+        };
+      } else {
+        return { hasData: false };
+      }
+    } catch (error) {
+      console.error('检查存储状态失败:', error);
+      return { hasData: false, error: error.message };
+    }
   },
 
   // 切换标签页
@@ -448,5 +516,182 @@ Page({
   // 返回首页
   goBack() {
     tt.navigateBack();
-  }
+  },
+
+  /**
+   * 测试获取用户信息 - 使用user_info权限
+   */
+  async testGetUserInfo() {
+    try {
+      console.log('🔍 开始测试user_info权限...');
+      
+      // 首先重新检查授权状态
+      console.log('🔄 重新检查授权状态...');
+      douyinAuth._loadFromStorage();
+      
+      // 输出当前状态详情
+      console.log('📊 当前授权状态详情:', {
+        hasOAuthAuth: douyinAuth.hasOAuthAuth,
+        hasAccessToken: !!douyinAuth._accessToken,
+        accessTokenLength: douyinAuth._accessToken ? douyinAuth._accessToken.length : 0,
+        accessTokenPrefix: douyinAuth._accessToken ? douyinAuth._accessToken.substring(0, 20) + '...' : 'null',
+        hasOpenId: !!douyinAuth._openId,
+        openIdPrefix: douyinAuth._openId ? douyinAuth._openId.substring(0, 8) + '...' : 'undefined',
+        authorizedScopes: douyinAuth.authorizedScopes,
+        scopesLength: douyinAuth.authorizedScopes ? douyinAuth.authorizedScopes.length : 0,
+        hasUserInfoScope: douyinAuth.authorizedScopes ? douyinAuth.authorizedScopes.includes('user_info') : false
+      });
+      
+      // 如果没有基本的token或openId，显示错误
+      if (!douyinAuth._accessToken || !douyinAuth._openId) {
+        console.error('❌ 缺少基本的授权信息');
+        tt.showModal({
+          title: '权限测试失败',
+          content: `缺少基本的授权信息：\n\n- Access Token: ${douyinAuth._accessToken ? '有' : '无'}\n- OpenID: ${douyinAuth._openId ? '有' : '无'}\n\n请重新进行OAuth授权`,
+          showCancel: false,
+          confirmText: '重新授权',
+          success: () => {
+            tt.navigateBack();
+          }
+        });
+        return;
+      }
+      
+      // 即使OAuth状态检查失败，也尝试调用API（可能是状态同步问题）
+      if (!douyinAuth.hasOAuthAuth) {
+        console.warn('⚠️ OAuth状态检查失败，但仍尝试调用API...');
+        tt.showModal({
+          title: '状态异常但继续测试',
+          content: '检测到OAuth状态异常，但检测到有效的Token，是否继续测试user_info权限？',
+          showCancel: true,
+          cancelText: '取消',
+          confirmText: '继续测试',
+          success: async (res) => {
+            if (res.confirm) {
+              await this.forceTestUserInfo();
+            }
+          }
+        });
+        return;
+      }
+      
+      // 显示加载状态
+      tt.showLoading({
+        title: '获取用户信息中...'
+      });
+      
+      const result = await douyinAuth.getUserInfo();
+      
+      tt.hideLoading();
+      
+      if (result.success) {
+        console.log('✅ user_info权限测试成功:', result);
+        
+        // 更新页面数据
+        this.setData({
+          userInfo: result.user
+        });
+        
+        tt.showToast({
+          title: 'user_info权限有效！',
+          icon: 'success'
+        });
+        
+        // 输出详细信息到控制台
+        console.log('📊 用户信息详情:', {
+          nickname: result.user.nickname,
+          avatar: result.user.avatar,
+          gender: result.user.gender,
+          location: `${result.user.country}-${result.user.province}-${result.user.city}`,
+          mode: result.mode
+        });
+        
+      } else {
+        tt.showToast({
+          title: '获取用户信息失败',
+          icon: 'none'
+        });
+      }
+      
+    } catch (error) {
+      tt.hideLoading();
+      
+      console.error('❌ user_info权限测试失败:', error);
+      
+      let errorMessage = 'user_info权限测试失败';
+      if (error.isPermissionError) {
+        errorMessage = 'user_info权限不足';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      tt.showModal({
+        title: '权限测试失败',
+        content: `${errorMessage}\n\n错误详情: ${error.message || '未知错误'}\n\n是否查看详细调试信息？`,
+        showCancel: true,
+        cancelText: '我知道了',
+        confirmText: '查看详情',
+        success: (res) => {
+          if (res.confirm) {
+            // 输出详细错误信息
+            console.table({
+              '错误类型': error.name || 'Error',
+              '错误消息': error.message || '未知',
+              '是否权限错误': error.isPermissionError ? '是' : '否',
+              'HTTP状态': error.status || '未知',
+              '当前Token': douyinAuth._accessToken ? douyinAuth._accessToken.substring(0, 30) + '...' : '无',
+              '当前OpenID': douyinAuth._openId ? douyinAuth._openId.substring(0, 15) + '...' : '无',
+              '权限列表': JSON.stringify(douyinAuth.authorizedScopes || [])
+            });
+          }
+        }
+      });
+    }
+  },
+
+  /**
+   * 强制测试用户信息API - 忽略OAuth状态检查
+   */
+  async forceTestUserInfo() {
+    try {
+      console.log('🚀 强制测试user_info权限（忽略OAuth状态检查）...');
+      
+      tt.showLoading({
+        title: '强制测试中...'
+      });
+      
+      // 直接调用后端API，绕过前端的OAuth状态检查
+      const result = await douyinAuth._callBackendAPI('/api/douyin/user-info', {
+        method: 'POST',
+        body: {
+          openId: douyinAuth._openId
+        }
+      });
+      
+      tt.hideLoading();
+      
+      console.log('🎉 强制测试成功:', result);
+      
+      // 更新页面数据
+      this.setData({
+        userInfo: result.user
+      });
+      
+      tt.showToast({
+        title: '强制测试成功！user_info权限有效',
+        icon: 'success'
+      });
+      
+    } catch (error) {
+      tt.hideLoading();
+      
+      console.error('❌ 强制测试失败:', error);
+      
+      tt.showToast({
+        title: `强制测试失败: ${error.message}`,
+        icon: 'none',
+        duration: 3000
+      });
+    }
+  },
 }); 

@@ -1,1 +1,49 @@
 {"date":"Mon Jun 30 2025 16:52:02 GMT+0800 (中国标准时间)","error":{"address":"::","code":"EADDRINUSE","errno":-4091,"port":3000,"syscall":"listen"},"exception":true,"level":"error","message":"uncaughtException: listen EADDRINUSE: address already in use :::3000\nError: listen EADDRINUSE: address already in use :::3000\n    at Server.setupListenHandle [as _listen2] (node:net:1904:16)\n    at listenInCluster (node:net:1961:12)\n    at Server.listen (node:net:2063:7)\n    at Function.listen (E:\\code\\kuz_ai\\MVP_douyin\\backend\\node_modules\\express\\lib\\application.js:635:24)\n    at Object.<anonymous> (E:\\code\\kuz_ai\\MVP_douyin\\backend\\app.js:79:5)\n    at Module._compile (node:internal/modules/cjs/loader:1469:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1548:10)\n    at Module.load (node:internal/modules/cjs/loader:1288:32)\n    at Module._load (node:internal/modules/cjs/loader:1104:12)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:174:12)","os":{"loadavg":[0,0,0],"uptime":948622},"process":{"argv":["E:\\nodejs\\node.exe","E:\\code\\kuz_ai\\MVP_douyin\\backend\\app.js"],"cwd":"E:\\code\\kuz_ai\\MVP_douyin\\backend","execPath":"E:\\nodejs\\node.exe","gid":null,"memoryUsage":{"arrayBuffers":65708,"external":3316000,"heapTotal":18845696,"heapUsed":12927704,"rss":53432320},"pid":96564,"uid":null,"version":"v20.18.0"},"service":"douyin-miniapp-backend","stack":"Error: listen EADDRINUSE: address already in use :::3000\n    at Server.setupListenHandle [as _listen2] (node:net:1904:16)\n    at listenInCluster (node:net:1961:12)\n    at Server.listen (node:net:2063:7)\n    at Function.listen (E:\\code\\kuz_ai\\MVP_douyin\\backend\\node_modules\\express\\lib\\application.js:635:24)\n    at Object.<anonymous> (E:\\code\\kuz_ai\\MVP_douyin\\backend\\app.js:79:5)\n    at Module._compile (node:internal/modules/cjs/loader:1469:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1548:10)\n    at Module.load (node:internal/modules/cjs/loader:1288:32)\n    at Module._load (node:internal/modules/cjs/loader:1104:12)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:174:12)","timestamp":"2025-06-30 16:52:02","trace":[{"column":16,"file":"node:net","function":"Server.setupListenHandle [as _listen2]","line":1904,"method":"setupListenHandle [as _listen2]","native":false},{"column":12,"file":"node:net","function":"listenInCluster","line":1961,"method":null,"native":false},{"column":7,"file":"node:net","function":"Server.listen","line":2063,"method":"listen","native":false},{"column":24,"file":"E:\\code\\kuz_ai\\MVP_douyin\\backend\\node_modules\\express\\lib\\application.js","function":"Function.listen","line":635,"method":"listen","native":false},{"column":5,"file":"E:\\code\\kuz_ai\\MVP_douyin\\backend\\app.js","function":null,"line":79,"method":null,"native":false},{"column":14,"file":"node:internal/modules/cjs/loader","function":"Module._compile","line":1469,"method":"_compile","native":false},{"column":10,"file":"node:internal/modules/cjs/loader","function":"Module._extensions..js","line":1548,"method":".js","native":false},{"column":32,"file":"node:internal/modules/cjs/loader","function":"Module.load","line":1288,"method":"load","native":false},{"column":12,"file":"node:internal/modules/cjs/loader","function":"Module._load","line":1104,"method":"_load","native":false},{"column":12,"file":"node:internal/modules/run_main","function":"Function.executeUserEntryPoint [as runMain]","line":174,"method":"executeUserEntryPoint [as runMain]","native":false}]}
+2025-07-02 13:20:44 [[31merror[39m]: [31muncaughtException: listen EADDRINUSE: address already in use :::3090[39m
+[31mError: listen EADDRINUSE: address already in use :::3090[39m
+[31m    at Server.setupListenHandle [as _listen2] (node:net:1904:16)[39m
+[31m    at listenInCluster (node:net:1961:12)[39m
+[31m    at Server.listen (node:net:2063:7)[39m
+[31m    at Function.listen (E:\code\kuz_ai\MVP_douyin\backend\node_modules\express\lib\application.js:635:24)[39m
+[31m    at Object.<anonymous> (E:\code\kuz_ai\MVP_douyin\backend\app.js:127:20)[39m
+[31m    at Module._compile (node:internal/modules/cjs/loader:1469:14)[39m
+[31m    at Module._extensions..js (node:internal/modules/cjs/loader:1548:10)[39m
+[31m    at Module.load (node:internal/modules/cjs/loader:1288:32)[39m
+[31m    at Module._load (node:internal/modules/cjs/loader:1104:12)[39m
+[31m    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:174:12)[39m
+2025-07-02 13:20:44 [[31merror[39m]: [31muncaughtException: listen EADDRINUSE: address already in use :::3090[39m
+[31mError: listen EADDRINUSE: address already in use :::3090[39m
+[31m    at Server.setupListenHandle [as _listen2] (node:net:1904:16)[39m
+[31m    at listenInCluster (node:net:1961:12)[39m
+[31m    at Server.listen (node:net:2063:7)[39m
+[31m    at Function.listen (E:\code\kuz_ai\MVP_douyin\backend\node_modules\express\lib\application.js:635:24)[39m
+[31m    at Object.<anonymous> (E:\code\kuz_ai\MVP_douyin\backend\app.js:127:20)[39m
+[31m    at Module._compile (node:internal/modules/cjs/loader:1469:14)[39m
+[31m    at Module._extensions..js (node:internal/modules/cjs/loader:1548:10)[39m
+[31m    at Module.load (node:internal/modules/cjs/loader:1288:32)[39m
+[31m    at Module._load (node:internal/modules/cjs/loader:1104:12)[39m
+[31m    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:174:12)[39m
+2025-07-02 13:38:08 [[31merror[39m]: [31muncaughtException: listen EADDRINUSE: address already in use :::3090[39m
+[31mError: listen EADDRINUSE: address already in use :::3090[39m
+[31m    at Server.setupListenHandle [as _listen2] (node:net:1904:16)[39m
+[31m    at listenInCluster (node:net:1961:12)[39m
+[31m    at Server.listen (node:net:2063:7)[39m
+[31m    at Function.listen (E:\code\kuz_ai\MVP_douyin\backend\node_modules\express\lib\application.js:635:24)[39m
+[31m    at Object.<anonymous> (E:\code\kuz_ai\MVP_douyin\backend\app.js:127:20)[39m
+[31m    at Module._compile (node:internal/modules/cjs/loader:1469:14)[39m
+[31m    at Module._extensions..js (node:internal/modules/cjs/loader:1548:10)[39m
+[31m    at Module.load (node:internal/modules/cjs/loader:1288:32)[39m
+[31m    at Module._load (node:internal/modules/cjs/loader:1104:12)[39m
+[31m    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:174:12)[39m
+2025-07-02 13:38:08 [[31merror[39m]: [31muncaughtException: listen EADDRINUSE: address already in use :::3090[39m
+[31mError: listen EADDRINUSE: address already in use :::3090[39m
+[31m    at Server.setupListenHandle [as _listen2] (node:net:1904:16)[39m
+[31m    at listenInCluster (node:net:1961:12)[39m
+[31m    at Server.listen (node:net:2063:7)[39m
+[31m    at Function.listen (E:\code\kuz_ai\MVP_douyin\backend\node_modules\express\lib\application.js:635:24)[39m
+[31m    at Object.<anonymous> (E:\code\kuz_ai\MVP_douyin\backend\app.js:127:20)[39m
+[31m    at Module._compile (node:internal/modules/cjs/loader:1469:14)[39m
+[31m    at Module._extensions..js (node:internal/modules/cjs/loader:1548:10)[39m
+[31m    at Module.load (node:internal/modules/cjs/loader:1288:32)[39m
+[31m    at Module._load (node:internal/modules/cjs/loader:1104:12)[39m
+[31m    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:174:12)[39m

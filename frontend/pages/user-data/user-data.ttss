@@ -490,3 +490,67 @@
     gap: 10rpx;
   }
 }
+
+/* 权限测试按钮样式 */
+.test-buttons {
+  padding: 30rpx;
+  background: #fff;
+  margin-bottom: 20rpx;
+}
+
+.test-button {
+  width: 100%;
+  padding: 20rpx;
+  background: linear-gradient(45deg, #007AFF, #5AC8FA);
+  color: white;
+  border: none;
+  border-radius: 12rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  box-shadow: 0 4rpx 12rpx rgba(0, 122, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.test-button:active {
+  transform: scale(0.98);
+  box-shadow: 0 2rpx 8rpx rgba(0, 122, 255, 0.2);
+}
+
+/* 用户信息显示区域样式 */
+.user-info-section {
+  background: #fff;
+  margin-bottom: 20rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.user-info-content {
+  padding: 30rpx;
+}
+
+.user-info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.user-info-item:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-size: 28rpx;
+  color: #666;
+  font-weight: 500;
+}
+
+.info-value {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 600;
+  max-width: 400rpx;
+  text-align: right;
+  word-break: break-all;
+}
