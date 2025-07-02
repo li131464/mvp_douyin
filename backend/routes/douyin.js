@@ -600,4 +600,136 @@ router.post('/user-info', verifyAccessToken, asyncHandler(async (req, res) => {
   }
 }));
 
+// 测试user_info权限的新端点
+router.post('/user-info', verifyAccessToken, async (req, res) => {
+  logger.info('API request to /user-info');
+  
+  try {
+    const { access_token, open_id, scopes } = req.auth;
+    
+    logger.debug('User info request parameters:', {
+      hasAccessToken: !!access_token,
+      openId: open_id,
+      scopes: scopes
+    });
+    
+    // 检查是否有user_info权限
+    if (!scopes || !scopes.includes('user_info')) {
+      logger.warn('user_info permission not granted');
+      return res.status(403).json({
+        success: false,
+        error: 'user_info权限未授权',
+        availableScopes: scopes || []
+      });
+    }
+    
+    // 调用抖音API获取用户信息
+    const result = await douyinApi.getUserInfo(access_token, open_id);
+    
+    logger.info('User info API call completed:', {
+      success: result.success,
+      hasUserInfo: !!result.user
+    });
+    
+    res.json({
+      success: true,
+      ...result
+    });
+    
+  } catch (error) {
+    logger.error('Error in /user-info:', {
+      message: error.message,
+      isPermissionError: error.isPermissionError,
+      apiError: error.apiError
+    });
+    
+    if (error.isPermissionError) {
+      res.status(403).json({
+        success: false,
+        error: 'user_info权限测试失败',
+        message: error.message,
+        apiError: error.apiError
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: '服务器内部错误',
+        message: error.message
+      });
+    }
+  }
+});
+
+// 测试ma.item.data权限的新端点
+router.post('/video-base-data', verifyAccessToken, async (req, res) => {
+  logger.info('API request to /video-base-data');
+  
+  try {
+    const { access_token, open_id, scopes } = req.auth;
+    const { item_id } = req.body;
+    
+    logger.debug('Video base data request parameters:', {
+      hasAccessToken: !!access_token,
+      openId: open_id,
+      itemId: item_id,
+      scopes: scopes
+    });
+    
+    // 验证必需参数
+    if (!item_id) {
+      return res.status(400).json({
+        success: false,
+        error: '缺少必需参数 item_id'
+      });
+    }
+    
+    // 检查是否有ma.item.data权限
+    if (!scopes || !scopes.includes('ma.item.data')) {
+      logger.warn('ma.item.data permission not granted');
+      return res.status(403).json({
+        success: false,
+        error: 'ma.item.data权限未授权',
+        message: '需要ma.item.data权限来查询视频基础数据',
+        availableScopes: scopes || []
+      });
+    }
+    
+    // 调用抖音API获取视频基础数据
+    const result = await douyinApi.getVideoBaseDataWithMaItemData(access_token, open_id, item_id);
+    
+    logger.info('Video base data API call completed:', {
+      success: result.success,
+      itemId: result.item_id,
+      hasData: !!result.data
+    });
+    
+    res.json({
+      success: true,
+      ...result
+    });
+    
+  } catch (error) {
+    logger.error('Error in /video-base-data:', {
+      message: error.message,
+      isPermissionError: error.isPermissionError,
+      apiError: error.apiError
+    });
+    
+    if (error.isPermissionError) {
+      res.status(403).json({
+        success: false,
+        error: 'ma.item.data权限测试失败',
+        message: error.message,
+        apiError: error.apiError
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: '服务器内部错误',
+        message: error.message
+      });
+    }
+  }
+});
+
 module.exports = router; 

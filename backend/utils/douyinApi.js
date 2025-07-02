@@ -1002,6 +1002,168 @@ class DouyinAPI {
     }
   }
 
+  /**
+   * 获取视频基础数据 - 使用ma.item.data权限
+   * API文档：https://developer.open-douyin.com/docs/resource/zh-CN/mini-app/develop/server/basic-abilities/video-id-convert/user-recent-video-data/get-basic-data
+   * 权限要求：ma.item.data
+   */
+  async getVideoBaseDataWithMaItemData(accessToken, openId, itemId) {
+    try {
+      if (!this.appId || !this.appSecret) {
+        logger.info('No API credentials configured, using mock mode for video base data');
+        return this._mockGetVideoBaseData(itemId);
+      }
+      
+      logger.info('Attempting real Douyin API call for video base data with ma.item.data permission');
+      logger.debug('getVideoBaseDataWithMaItemData parameters:', {
+        openId: openId,
+        itemId: itemId,
+        hasAccessToken: !!accessToken
+      });
+      
+      // 使用官方文档规定的API端点
+      const apiUrl = '/api/apps/v1/item/get_base/';
+      
+      // 注意：item_id需要进行URL编码
+      const encodedItemId = encodeURIComponent(itemId);
+      
+      logger.debug('调用抖音视频基础数据API (ma.item.data权限):', {
+        url: apiUrl,
+        openId: openId,
+        itemId: itemId,
+        encodedItemId: encodedItemId,
+        hasAccessToken: !!accessToken,
+        accessTokenLength: accessToken ? accessToken.length : 0,
+        accessTokenPrefix: accessToken ? accessToken.substring(0, 8) + '...' : 'undefined',
+        isMockToken: accessToken ? accessToken.includes('mock_access_token') : false,
+        requestTime: new Date().toISOString(),
+        baseURL: this.baseURL
+      });
+      
+      // 使用GET请求，按照官方文档要求
+      const response = await this.client.get(apiUrl, {
+        params: {
+          open_id: openId,
+          item_id: encodedItemId
+        },
+        headers: {
+          'access-token': accessToken,
+          'content-type': 'application/json'
+        }
+      });
+      
+      // 输出完整的API响应
+      logger.info('🔍 完整的抖音视频基础数据API响应:', JSON.stringify(response.data, null, 2));
+      
+      logger.debug('Douyin video base data API response:', {
+        status: response.status,
+        data: response.data
+      });
+      
+      // 输出详细的响应分析
+      logger.info('📊 视频基础数据响应详细分析:', {
+        responseKeys: Object.keys(response.data),
+        responseSize: JSON.stringify(response.data).length,
+        hasErrNo: !!response.data.err_no,
+        errNo: response.data.err_no,
+        errMsg: response.data.err_msg,
+        hasData: !!response.data.data,
+        hasResult: !!(response.data.data && response.data.data.data && response.data.data.data.result),
+        httpStatus: response.status,
+        httpStatusText: response.statusText,
+        logId: response.data.log_id
+      });
+      
+      // 检查API响应格式（使用err_no和err_msg）
+      if (response.data.err_no && response.data.err_no !== 0) {
+        logger.error('Douyin video base data API error:', {
+          err_no: response.data.err_no,
+          err_msg: response.data.err_msg,
+          log_id: response.data.log_id
+        });
+        
+        // 检查是否是权限相关错误
+        if ([28001003, 28001008, 28001014, 28001018, 28001019, 28001005, 28001016, 28001006, 28003017, 28001007].includes(response.data.err_no)) {
+          const permissionError = new Error(`抖音API权限错误: ${response.data.err_msg || 'ma.item.data权限不足或access_token无效'}`);
+          permissionError.isPermissionError = true;
+          permissionError.apiError = {
+            err_no: response.data.err_no,
+            err_msg: response.data.err_msg,
+            log_id: response.data.log_id
+          };
+          throw permissionError;
+        }
+        
+        throw new Error(`Douyin API Error [${response.data.err_no}]: ${response.data.err_msg}`);
+      }
+      
+      // 解析视频基础数据（按照官方文档格式）
+      const videoData = response.data.data?.data?.result || {};
+      
+      const result = {
+        success: true,
+        data: {
+          total_like: videoData.total_like || 0,        // 近30天点赞数
+          total_comment: videoData.total_comment || 0,   // 近30天评论数
+          total_share: videoData.total_share || 0,       // 近30天分享数
+          total_play: videoData.total_play || 0,         // 近30天播放次数
+          avg_play_duration: videoData.avg_play_duration || 0  // 近30天平均播放时长(秒)
+        },
+        item_id: itemId,
+        log_id: response.data.log_id
+      };
+      
+      logger.info('Real Douyin API video base data call successful:', {
+        itemId: itemId,
+        totalLike: result.data.total_like,
+        totalComment: result.data.total_comment,
+        totalShare: result.data.total_share,
+        totalPlay: result.data.total_play,
+        avgPlayDuration: result.data.avg_play_duration
+      });
+      
+      return result;
+    } catch (error) {
+      logger.error('Real Douyin API video base data call failed:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url,
+        method: error.config?.method,
+        headers: error.config?.headers
+      });
+      
+      // 如果是权限相关错误，不要回退到mock模式，直接抛出错误
+      if (error.response?.status === 401 || 
+          error.response?.status === 403 ||
+          error.isPermissionError ||
+          (error.response?.data?.err_no && 
+           [28001003, 28001008, 28001014, 28001018, 28001019, 28001005, 28001016, 28001006, 28003017, 28001007].includes(error.response.data.err_no))) {
+        
+        // 构造详细的权限错误信息
+        const errorInfo = {
+          status: error.response?.status,
+          err_no: error.response?.data?.err_no,
+          err_msg: error.response?.data?.err_msg,
+          log_id: error.response?.data?.log_id
+        };
+        
+        logger.error('抖音视频基础数据API权限错误，不使用Mock模式:', errorInfo);
+        
+        // 抛出更详细的权限错误
+        const permissionError = new Error(`抖音视频基础数据API权限错误: ${errorInfo.err_msg || error.message || 'ma.item.data权限不足或访问令牌无效'}`);
+        permissionError.isPermissionError = true;
+        permissionError.apiError = errorInfo;
+        throw permissionError;
+      }
+      
+      // 其他错误回退到模拟模式
+      logger.warn('Falling back to mock mode for video base data due to API error');
+      return this._mockGetVideoBaseData(itemId);
+    }
+  }
+
   // 模拟方法
   _mockCode2Session(code) {
     logger.info('Using mock code2session');
@@ -1099,39 +1261,33 @@ class DouyinAPI {
       timestamp: Date.now()
     });
     
-    const videos = [];
-    const startIndex = cursor;
-    
-    for (let i = 0; i < count; i++) {
-      const index = startIndex + i;
-      videos.push({
-        item_id: `video_${index}`,
-        title: `后端API视频${index + 1} - 真实数据结构`,
-        cover: `https://mock-cover-${index}.jpg`,
-        statistics: {
-          play_count: Math.floor(Math.random() * 100000),
-          digg_count: Math.floor(Math.random() * 10000),
-          comment_count: Math.floor(Math.random() * 1000),
-          share_count: Math.floor(Math.random() * 500)
-        },
-        create_time: Date.now() - (index * 24 * 60 * 60 * 1000),
-        duration: Math.floor(Math.random() * 60) + 15,
-        is_top: index < 3
-      });
-    }
+    // 模拟视频数据
+    const mockVideos = Array.from({ length: Math.min(count, 10) }, (_, index) => ({
+      id: `mock_video_id_${cursor + index + 1}`,
+      title: `模拟视频 ${cursor + index + 1}`,
+      description: `这是模拟的第 ${cursor + index + 1} 个视频描述`,
+      cover: `https://example.com/cover_${cursor + index + 1}.jpg`,
+      video_url: `https://example.com/video_${cursor + index + 1}.mp4`,
+      create_time: Date.now() - (cursor + index + 1) * 24 * 60 * 60 * 1000,
+      stats: {
+        view_count: Math.floor(Math.random() * 10000),
+        like_count: Math.floor(Math.random() * 1000),
+        comment_count: Math.floor(Math.random() * 100),
+        share_count: Math.floor(Math.random() * 50)
+      }
+    }));
     
     const result = {
       success: true,
-      data: videos,
-      cursor: cursor + count,
-      has_more: cursor + count < 100
+      videos: mockVideos,
+      cursor: cursor,
+      has_more: cursor + count < 30 // 模拟有30个视频
     };
     
     logger.debug('Mock getUserVideos result:', {
-      videoCount: videos.length,
-      nextCursor: result.cursor,
-      hasMore: result.has_more,
-      totalPossible: 100
+      videoCount: result.videos.length,
+      cursor: result.cursor,
+      hasMore: result.has_more
     });
     
     return result;
@@ -1229,36 +1385,33 @@ class DouyinAPI {
   }
 
   _mockGetVideoBaseData(itemId) {
-    logger.info('Using mock get video base data');
+    logger.info('Using mock get video base data for ma.item.data permission');
     logger.debug('Mock getVideoBaseData parameters:', { 
       itemId: itemId,
       timestamp: Date.now()
     });
     
-    // 模拟近30天视频基础数据
+    // 模拟视频基础数据（按照官方API格式）
     const result = {
       success: true,
       data: {
-        total_like: Math.floor(Math.random() * 1000) + 100,        // 最近30天点赞数
-        total_comment: Math.floor(Math.random() * 200) + 20,       // 最近30天评论数
-        total_share: Math.floor(Math.random() * 50) + 5,           // 最近30天分享数
-        total_play: Math.floor(Math.random() * 5000) + 500,        // 最近30天播放次数
-        avg_play_duration: Math.floor(Math.random() * 60) + 15     // 最近30天平均播放时长(秒)
+        total_like: Math.floor(Math.random() * 1000) + 100,      // 近30天点赞数
+        total_comment: Math.floor(Math.random() * 200) + 50,     // 近30天评论数
+        total_share: Math.floor(Math.random() * 100) + 20,       // 近30天分享数
+        total_play: Math.floor(Math.random() * 5000) + 1000,     // 近30天播放次数
+        avg_play_duration: Math.floor(Math.random() * 60) + 30   // 近30天平均播放时长(秒)
       },
-      total_like: Math.floor(Math.random() * 1000) + 100,
-      total_comment: Math.floor(Math.random() * 200) + 20,
-      total_share: Math.floor(Math.random() * 50) + 5,
-      total_play: Math.floor(Math.random() * 5000) + 500,
-      avg_play_duration: Math.floor(Math.random() * 60) + 15
+      item_id: itemId,
+      log_id: `mock_log_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`
     };
     
     logger.debug('Mock getVideoBaseData result:', {
-      itemId: itemId,
-      totalLike: result.total_like,
-      totalComment: result.total_comment,
-      totalShare: result.total_share,
-      totalPlay: result.total_play,
-      avgPlayDuration: result.avg_play_duration
+      itemId: result.item_id,
+      totalLike: result.data.total_like,
+      totalComment: result.data.total_comment,
+      totalShare: result.data.total_share,
+      totalPlay: result.data.total_play,
+      avgPlayDuration: result.data.avg_play_duration
     });
     
     return result;

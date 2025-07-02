@@ -27,7 +27,34 @@ Page({
     messageError: null,
     
     // 用户信息
-    userInfo: null
+    userInfo: null,
+    isLoggedIn: false,
+    hasOAuthAuth: false,
+    userData: null,
+    oauthInfo: null,
+    debugInfo: {
+      refreshTime: '',
+      basic: '',
+      oauth: '',
+      videos: '',
+      env: ''
+    },
+    userInfoTest: {
+      loading: false,
+      status: '未测试',
+      success: false,
+      error: false,
+      result: ''
+    },
+    itemDataTest: {
+      loading: false,
+      status: '未测试', 
+      success: false,
+      error: false,
+      result: '',
+      videoData: null
+    },
+    testItemId: '' // 用户输入的测试item_id
   },
 
   onLoad() {
@@ -92,7 +119,15 @@ Page({
     const isRealData = douyinAuth._accessToken && !douyinAuth._accessToken.includes('mock');
     this.setData({
       userInfo: douyinAuth.userInfo,
-      dataSource: isRealData ? '🔴 真实数据模式' : '🟡 模拟数据模式'
+      dataSource: isRealData ? '🔴 真实数据模式' : '🟡 模拟数据模式',
+      isLoggedIn: true,
+      hasOAuthAuth: douyinAuth.hasOAuthAuth,
+      userData: douyinAuth.userInfo,
+      oauthInfo: {
+        scopes: douyinAuth.authorizedScopes,
+        openId: douyinAuth._openId,
+        unionId: douyinAuth._unionId
+      }
     });
     
     // 根据当前标签页加载数据
@@ -114,6 +149,30 @@ Page({
       sessionKey: douyinAuth._sessionKey ? 'present' : 'missing',
       activeTab: this.data.activeTab,
       timestamp: new Date().toISOString()
+    });
+  },
+
+  onShow() {
+    console.log('用户数据页面 onShow');
+    
+    // 重新检查OAuth状态
+    douyinAuth._loadFromStorage();
+    
+    this.setData({
+      isLoggedIn: true,
+      hasOAuthAuth: douyinAuth.hasOAuthAuth,
+      userData: douyinAuth.userInfo,
+      oauthInfo: {
+        scopes: douyinAuth.authorizedScopes,
+        openId: douyinAuth._openId,
+        unionId: douyinAuth._unionId
+      }
+    });
+    
+    console.log('onShow - 状态更新:', {
+      isLoggedIn: this.data.isLoggedIn,
+      hasOAuthAuth: this.data.hasOAuthAuth,
+      scopes: douyinAuth.authorizedScopes
     });
   },
 
@@ -694,4 +753,121 @@ Page({
       });
     }
   },
+
+  // 处理item_id输入
+  onItemIdInput(e) {
+    this.setData({
+      testItemId: e.detail.value
+    });
+  },
+
+  // 测试user_info权限
+  async testUserInfoPermission() {
+    console.log('开始测试user_info权限...');
+    
+    this.setData({
+      'userInfoTest.loading': true,
+      'userInfoTest.status': '测试中...',
+      'userInfoTest.success': false,
+      'userInfoTest.error': false,
+      'userInfoTest.result': ''
+    });
+    
+    try {
+      const response = await douyinAuth._callBackendAPI('/api/douyin/user-info', {
+        method: 'POST',
+        body: {
+          openId: douyinAuth._openId
+        }
+      });
+      
+      if (response.success) {
+        this.setData({
+          'userInfoTest.loading': false,
+          'userInfoTest.status': '测试成功',
+          'userInfoTest.success': true,
+          'userInfoTest.result': `✅ user_info权限测试成功！获取到用户信息: ${response.user ? JSON.stringify(response.user, null, 2) : '用户信息为空'}`
+        });
+        
+        console.log('✅ user_info权限测试成功', response);
+      } else {
+        this.setData({
+          'userInfoTest.loading': false,
+          'userInfoTest.status': '测试失败',
+          'userInfoTest.error': true,
+          'userInfoTest.result': `❌ user_info权限测试失败: ${response.error || response.message || '未知错误'}`
+        });
+        
+        console.log('❌ user_info权限测试失败', response);
+      }
+    } catch (error) {
+      this.setData({
+        'userInfoTest.loading': false,
+        'userInfoTest.status': '测试出错',
+        'userInfoTest.error': true,
+        'userInfoTest.result': `❌ user_info权限测试出错: ${error.message || '网络错误'}`
+      });
+      
+      console.error('user_info权限测试出错:', error);
+    }
+  },
+
+  // 测试ma.item.data权限
+  async testMaItemDataPermission() {
+    console.log('开始测试ma.item.data权限...');
+    
+    this.setData({
+      'itemDataTest.loading': true,
+      'itemDataTest.status': '测试中...',
+      'itemDataTest.success': false,
+      'itemDataTest.error': false,
+      'itemDataTest.result': '',
+      'itemDataTest.videoData': null
+    });
+    
+    try {
+      // 使用用户输入的item_id，或者默认的测试ID
+      const itemId = this.data.testItemId.trim() || 'test_video_item_id_12345';
+      
+      console.log('测试ma.item.data权限，使用item_id:', itemId);
+      
+      const response = await douyinAuth._callBackendAPI('/api/douyin/video-base-data', {
+        method: 'POST',
+        body: {
+          openId: douyinAuth._openId,
+          item_id: itemId
+        }
+      });
+      
+      if (response.success) {
+        this.setData({
+          'itemDataTest.loading': false,
+          'itemDataTest.status': '测试成功',
+          'itemDataTest.success': true,
+          'itemDataTest.result': `✅ ma.item.data权限测试成功！获取到视频基础数据`,
+          'itemDataTest.videoData': response.data
+        });
+        
+        console.log('✅ ma.item.data权限测试成功', response);
+      } else {
+        this.setData({
+          'itemDataTest.loading': false,
+          'itemDataTest.status': '测试失败',
+          'itemDataTest.error': true,
+          'itemDataTest.result': `❌ ma.item.data权限测试失败: ${response.error || response.message || '未知错误'}`
+        });
+        
+        console.log('❌ ma.item.data权限测试失败', response);
+      }
+    } catch (error) {
+      this.setData({
+        'itemDataTest.loading': false,
+        'itemDataTest.status': '测试出错',
+        'itemDataTest.error': true,
+        'itemDataTest.result': `❌ ma.item.data权限测试出错: ${error.message || '网络错误'}`
+      });
+      
+      console.error('ma.item.data权限测试出错:', error);
+    }
+  }
 }); 

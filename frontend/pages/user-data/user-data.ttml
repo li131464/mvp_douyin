@@ -210,5 +210,65 @@
         </view>
       </view>
     </view>
+
+    <!-- 权限测试区域 -->
+    <view class="permission-test-section" tt:if="{{isLoggedIn && hasOAuthAuth}}">
+      <view class="section-title">权限测试</view>
+      
+      <!-- user_info权限测试 -->
+      <view class="test-card">
+        <view class="test-header">
+          <text class="test-title">user_info权限测试</text>
+          <text class="test-status {{userInfoTest.success ? 'success' : userInfoTest.error ? 'error' : ''}}">
+            {{userInfoTest.status}}
+          </text>
+        </view>
+        
+        <button class="test-button" bindtap="testUserInfoPermission" disabled="{{userInfoTest.loading}}">
+          {{userInfoTest.loading ? '测试中...' : '测试user_info权限'}}
+        </button>
+        
+        <view class="test-result" tt:if="{{userInfoTest.result}}">
+          <text class="result-text">{{userInfoTest.result}}</text>
+        </view>
+      </view>
+
+      <!-- ma.item.data权限测试 -->
+      <view class="test-card">
+        <view class="test-header">
+          <text class="test-title">ma.item.data权限测试</text>
+          <text class="test-status {{itemDataTest.success ? 'success' : itemDataTest.error ? 'error' : ''}}">
+            {{itemDataTest.status}}
+          </text>
+        </view>
+        
+        <!-- item_id输入框 -->
+        <view class="input-group">
+          <text class="input-label">视频item_id（测试用）:</text>
+          <input class="item-id-input" 
+                 value="{{testItemId}}" 
+                 bindinput="onItemIdInput" 
+                 placeholder="请输入视频item_id，留空使用默认测试ID"/>
+        </view>
+        
+        <button class="test-button" bindtap="testMaItemDataPermission" disabled="{{itemDataTest.loading}}">
+          {{itemDataTest.loading ? '测试中...' : '测试ma.item.data权限'}}
+        </button>
+        
+        <view class="test-result" tt:if="{{itemDataTest.result}}">
+          <text class="result-text">{{itemDataTest.result}}</text>
+        </view>
+        
+        <!-- 显示视频数据详情 -->
+        <view class="video-data-details" tt:if="{{itemDataTest.videoData}}">
+          <view class="detail-title">视频基础数据（近30天）:</view>
+          <view class="data-item">点赞数: {{itemDataTest.videoData.total_like}}</view>
+          <view class="data-item">评论数: {{itemDataTest.videoData.total_comment}}</view>
+          <view class="data-item">分享数: {{itemDataTest.videoData.total_share}}</view>
+          <view class="data-item">播放数: {{itemDataTest.videoData.total_play}}</view>
+          <view class="data-item">平均播放时长: {{itemDataTest.videoData.avg_play_duration}}秒</view>
+        </view>
+      </view>
+    </view>
   </view>
 </view> 

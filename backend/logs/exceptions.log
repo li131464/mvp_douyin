@@ -47,3 +47,99 @@
 [31m    at Module.load (node:internal/modules/cjs/loader:1288:32)[39m
 [31m    at Module._load (node:internal/modules/cjs/loader:1104:12)[39m
 [31m    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:174:12)[39m
+2025-07-02 14:23:32 [[31merror[39m]: [31muncaughtException: listen EADDRINUSE: address already in use :::3090[39m
+[31mError: listen EADDRINUSE: address already in use :::3090[39m
+[31m    at Server.setupListenHandle [as _listen2] (node:net:1904:16)[39m
+[31m    at listenInCluster (node:net:1961:12)[39m
+[31m    at Server.listen (node:net:2063:7)[39m
+[31m    at Function.listen (E:\code\kuz_ai\MVP_douyin\backend\node_modules\express\lib\application.js:635:24)[39m
+[31m    at Object.<anonymous> (E:\code\kuz_ai\MVP_douyin\backend\app.js:127:20)[39m
+[31m    at Module._compile (node:internal/modules/cjs/loader:1469:14)[39m
+[31m    at Module._extensions..js (node:internal/modules/cjs/loader:1548:10)[39m
+[31m    at Module.load (node:internal/modules/cjs/loader:1288:32)[39m
+[31m    at Module._load (node:internal/modules/cjs/loader:1104:12)[39m
+[31m    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:174:12)[39m
+2025-07-02 14:23:32 [[31merror[39m]: [31muncaughtException: listen EADDRINUSE: address already in use :::3090[39m
+[31mError: listen EADDRINUSE: address already in use :::3090[39m
+[31m    at Server.setupListenHandle [as _listen2] (node:net:1904:16)[39m
+[31m    at listenInCluster (node:net:1961:12)[39m
+[31m    at Server.listen (node:net:2063:7)[39m
+[31m    at Function.listen (E:\code\kuz_ai\MVP_douyin\backend\node_modules\express\lib\application.js:635:24)[39m
+[31m    at Object.<anonymous> (E:\code\kuz_ai\MVP_douyin\backend\app.js:127:20)[39m
+[31m    at Module._compile (node:internal/modules/cjs/loader:1469:14)[39m
+[31m    at Module._extensions..js (node:internal/modules/cjs/loader:1548:10)[39m
+[31m    at Module.load (node:internal/modules/cjs/loader:1288:32)[39m
+[31m    at Module._load (node:internal/modules/cjs/loader:1104:12)[39m
+[31m    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:174:12)[39m
+2025-07-02 15:00:42 [[31merror[39m]: [31muncaughtException: listen EADDRINUSE: address already in use :::3090[39m
+[31mError: listen EADDRINUSE: address already in use :::3090[39m
+[31m    at Server.setupListenHandle [as _listen2] (node:net:1904:16)[39m
+[31m    at listenInCluster (node:net:1961:12)[39m
+[31m    at Server.listen (node:net:2063:7)[39m
+[31m    at Function.listen (E:\code\kuz_ai\MVP_douyin\backend\node_modules\express\lib\application.js:635:24)[39m
+[31m    at Object.<anonymous> (E:\code\kuz_ai\MVP_douyin\backend\app.js:127:20)[39m
+[31m    at Module._compile (node:internal/modules/cjs/loader:1469:14)[39m
+[31m    at Module._extensions..js (node:internal/modules/cjs/loader:1548:10)[39m
+[31m    at Module.load (node:internal/modules/cjs/loader:1288:32)[39m
+[31m    at Module._load (node:internal/modules/cjs/loader:1104:12)[39m
+[31m    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:174:12)[39m
+2025-07-02 15:00:42 [[31merror[39m]: [31muncaughtException: listen EADDRINUSE: address already in use :::3090[39m
+[31mError: listen EADDRINUSE: address already in use :::3090[39m
+[31m    at Server.setupListenHandle [as _listen2] (node:net:1904:16)[39m
+[31m    at listenInCluster (node:net:1961:12)[39m
+[31m    at Server.listen (node:net:2063:7)[39m
+[31m    at Function.listen (E:\code\kuz_ai\MVP_douyin\backend\node_modules\express\lib\application.js:635:24)[39m
+[31m    at Object.<anonymous> (E:\code\kuz_ai\MVP_douyin\backend\app.js:127:20)[39m
+[31m    at Module._compile (node:internal/modules/cjs/loader:1469:14)[39m
+[31m    at Module._extensions..js (node:internal/modules/cjs/loader:1548:10)[39m
+[31m    at Module.load (node:internal/modules/cjs/loader:1288:32)[39m
+[31m    at Module._load (node:internal/modules/cjs/loader:1104:12)[39m
+[31m    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:174:12)[39m
+2025-07-02 15:08:42 [[31merror[39m]: [31muncaughtException: listen EADDRINUSE: address already in use :::3090[39m
+[31mError: listen EADDRINUSE: address already in use :::3090[39m
+[31m    at Server.setupListenHandle [as _listen2] (node:net:1904:16)[39m
+[31m    at listenInCluster (node:net:1961:12)[39m
+[31m    at Server.listen (node:net:2063:7)[39m
+[31m    at Function.listen (E:\code\kuz_ai\MVP_douyin\backend\node_modules\express\lib\application.js:635:24)[39m
+[31m    at Object.<anonymous> (E:\code\kuz_ai\MVP_douyin\backend\app.js:127:20)[39m
+[31m    at Module._compile (node:internal/modules/cjs/loader:1469:14)[39m
+[31m    at Module._extensions..js (node:internal/modules/cjs/loader:1548:10)[39m
+[31m    at Module.load (node:internal/modules/cjs/loader:1288:32)[39m
+[31m    at Module._load (node:internal/modules/cjs/loader:1104:12)[39m
+[31m    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:174:12)[39m
+2025-07-02 15:08:42 [[31merror[39m]: [31muncaughtException: listen EADDRINUSE: address already in use :::3090[39m
+[31mError: listen EADDRINUSE: address already in use :::3090[39m
+[31m    at Server.setupListenHandle [as _listen2] (node:net:1904:16)[39m
+[31m    at listenInCluster (node:net:1961:12)[39m
+[31m    at Server.listen (node:net:2063:7)[39m
+[31m    at Function.listen (E:\code\kuz_ai\MVP_douyin\backend\node_modules\express\lib\application.js:635:24)[39m
+[31m    at Object.<anonymous> (E:\code\kuz_ai\MVP_douyin\backend\app.js:127:20)[39m
+[31m    at Module._compile (node:internal/modules/cjs/loader:1469:14)[39m
+[31m    at Module._extensions..js (node:internal/modules/cjs/loader:1548:10)[39m
+[31m    at Module.load (node:internal/modules/cjs/loader:1288:32)[39m
+[31m    at Module._load (node:internal/modules/cjs/loader:1104:12)[39m
+[31m    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:174:12)[39m
+2025-07-02 15:11:22 [[31merror[39m]: [31muncaughtException: listen EADDRINUSE: address already in use :::3090[39m
+[31mError: listen EADDRINUSE: address already in use :::3090[39m
+[31m    at Server.setupListenHandle [as _listen2] (node:net:1904:16)[39m
+[31m    at listenInCluster (node:net:1961:12)[39m
+[31m    at Server.listen (node:net:2063:7)[39m
+[31m    at Function.listen (E:\code\kuz_ai\MVP_douyin\backend\node_modules\express\lib\application.js:635:24)[39m
+[31m    at Object.<anonymous> (E:\code\kuz_ai\MVP_douyin\backend\app.js:127:20)[39m
+[31m    at Module._compile (node:internal/modules/cjs/loader:1469:14)[39m
+[31m    at Module._extensions..js (node:internal/modules/cjs/loader:1548:10)[39m
+[31m    at Module.load (node:internal/modules/cjs/loader:1288:32)[39m
+[31m    at Module._load (node:internal/modules/cjs/loader:1104:12)[39m
+[31m    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:174:12)[39m
+2025-07-02 15:11:22 [[31merror[39m]: [31muncaughtException: listen EADDRINUSE: address already in use :::3090[39m
+[31mError: listen EADDRINUSE: address already in use :::3090[39m
+[31m    at Server.setupListenHandle [as _listen2] (node:net:1904:16)[39m
+[31m    at listenInCluster (node:net:1961:12)[39m
+[31m    at Server.listen (node:net:2063:7)[39m
+[31m    at Function.listen (E:\code\kuz_ai\MVP_douyin\backend\node_modules\express\lib\application.js:635:24)[39m
+[31m    at Object.<anonymous> (E:\code\kuz_ai\MVP_douyin\backend\app.js:127:20)[39m
+[31m    at Module._compile (node:internal/modules/cjs/loader:1469:14)[39m
+[31m    at Module._extensions..js (node:internal/modules/cjs/loader:1548:10)[39m
+[31m    at Module.load (node:internal/modules/cjs/loader:1288:32)[39m
+[31m    at Module._load (node:internal/modules/cjs/loader:1104:12)[39m
+[31m    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:174:12)[39m
